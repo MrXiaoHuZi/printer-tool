@@ -148,7 +148,7 @@
   body.mobile .modal-body select,body.mobile #autoRefreshMin{font-size:16px}
   /* 弹窗改手机底部抽屉样式 */
   body.mobile .modal-wrap{padding:0;align-items:flex-end}
-  body.mobile .modal-box{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0}
+  body.mobile .modal-box{max-width:100%;max-height:92vh;max-height:92dvh;border-radius:16px 16px 0 0;padding-bottom:env(safe-area-inset-bottom)}
   body.mobile .modal-foot{flex-wrap:wrap}
   body.mobile .modal-foot .btn{flex:1;min-width:120px}
   body.mobile .mm-input-row{flex-direction:column}
@@ -293,6 +293,21 @@
   body.dark .notice-bar .n-x{color:#fbbf24}
   body.dark .notice-bar .n-x:hover{background:#4a370f}
 
+  /* ========== 手机版查询结果:卡片式排版(宽表格在手机上会挤压错位,改为一设备一卡片) ========== */
+  body.mobile .table-wrap{overflow-x:visible;border:none;margin:10px 0 0}
+  body.mobile .result-table{display:block;min-width:0}
+  body.mobile .result-table thead{display:none}
+  body.mobile .result-table tbody{display:block}
+  body.mobile .result-table tr{display:block;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:2px 0;background:#fff}
+  body.mobile .result-table tr.err-row{background:#fef2f2}
+  body.mobile .result-table td{display:flex;align-items:center;gap:10px;border-top:none;padding:7px 12px}
+  body.mobile .result-table td::before{content:attr(data-label);flex:none;width:72px;font-size:11.5px;color:var(--muted);font-weight:600}
+  body.mobile .result-table td.dev-cell{font-size:15px;padding-top:10px}
+  body.mobile .result-table td.dev-cell::before{display:none}
+  body.mobile .result-table td.err-text{flex-direction:column;align-items:flex-start;gap:2px}
+  body.mobile.dark .result-table tbody tr{background:var(--card)}
+  body.mobile.dark .result-table tbody tr.err-row{background:#2a1518}
+
   .foot{text-align:center;font-size:12px;color:var(--muted);cursor:pointer}
   .foot:hover{text-decoration:underline}
 </style>
@@ -388,7 +403,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.6 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.7 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -405,11 +420,12 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.7.6";
+	var APP_VERSION = "2.7.7";
 	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
+		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
 		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局;手机版默认隐藏打印机操作列,版本弹窗连点标题 5 次输入管理密码后显示;接口凭据改为外置输入,文件不再内置凭据"],
 		["2.7.5", "打印机操作的下级弹窗支持「← 返回」上级;检测到新版时直接展示更新内容;底部版本号可点开查看更新记录"],
 		["2.7.4", "顶栏新增「下载本地版」:一键把最新在线版保存为本地文件,离线可用"],
@@ -964,6 +980,7 @@
         tr.appendChild(tdDev);
         /* 配网二维码按钮 */
         const tdQr = cell();
+        tdQr.dataset.label = "配网二维码";   /* 手机版卡片排版的字段标签 */
         const btn = document.createElement("span");
         btn.className = "qrcode-text-btn";
         btn.setAttribute("role", "button");
@@ -981,18 +998,28 @@
             tdErr.colSpan = 5;
             tr.appendChild(tdErr);
         } else {
-            tr.appendChild(cell(item.connMode));
-            tr.appendChild(cell(item.version, "cell-mono"));
-            tr.appendChild(cell(item.ip, "cell-mono"));
+            const tdConn = cell(item.connMode);
+            tdConn.dataset.label = "联网方式";
+            tr.appendChild(tdConn);
+            const tdVer = cell(item.version, "cell-mono");
+            tdVer.dataset.label = "固件版本";
+            tr.appendChild(tdVer);
+            const tdIp = cell(item.ip, "cell-mono");
+            tdIp.dataset.label = "IP地址";
+            tr.appendChild(tdIp);
             /* N617L / N536L / Y626 前缀:云端无打印状态数据,该列不显示 */
             if (noPrintStatus(item.devId)) {
-                tr.appendChild(cell("—", "cell-dim"));
+                const tdPs0 = cell("—", "cell-dim");
+                tdPs0.dataset.label = "打印机状态";
+                tr.appendChild(tdPs0);
             } else {
                 const tdPs = cell();
+                tdPs.dataset.label = "打印机状态";
                 tdPs.appendChild(statusPill(item.printerStatusText, item.printerCss));
                 tr.appendChild(tdPs);
             }
             const tdNs = cell();
+            tdNs.dataset.label = "网络状态";
             tdNs.appendChild(statusPill(item.networkStatusText, item.networkCss));
             tr.appendChild(tdNs);
         }
@@ -1175,6 +1202,7 @@
     }
     function buildOpsCell(devId) {
         const td = cell("", "cell-dim ops-col");
+        td.dataset.label = "打印机操作";   /* 手机版卡片排版的字段标签 */
         if (!supportsOps(devId)) {
             td.textContent = "—";
             return td;
