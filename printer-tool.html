@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1e3a8a">
+<title>云打印命令模拟工具(多设备批量查询)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"
+        onerror="this.onerror=null;this.src='https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js'"></script>
+<script src="https://cdn.jsdelivr.net/npm/gbk.js/dist/gbk.min.js"
+        onerror="this.onerror=null;this.src='https://unpkg.com/gbk.js/dist/gbk.min.js'"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"
+        onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.7.0/build/highlight.min.js';document.head.appendChild(s)"></script>
+<style>
+  /* ========== 设计变量与重置 ========== */
+  :root{
+    --bg:#eef1f7; --card:#fff; --line:#e3e8f0; --text:#1b2437; --muted:#6b7690;
+    --pri:#2563eb; --ok:#15803d; --warn:#b45309; --err:#dc2626;
+    --code-bg:#0d1117; --shadow:0 6px 24px rgba(23,32,56,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:"PingFang SC","HarmonyOS Sans","Microsoft YaHei","Segoe UI",Arial,sans-serif;
+    background:var(--bg);color:var(--text);font-size:14.5px;line-height:1.6;min-height:100vh;
+  }
+  .mono{font-family:Consolas,"Courier New",monospace}
+  button{font-family:inherit}
+  :focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+  /* ========== 顶栏 ========== */
+  .topbar{background:linear-gradient(120deg,#1e3a8a,#2563eb 55%,#0ea5e9);color:#fff;padding:16px 20px;box-shadow:var(--shadow)}
+  .topbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-ic{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center}
+  .brand-ic svg{width:22px;height:22px}
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:.5px}
+  .brand p{font-size:12px;opacity:.85}
+  .chip-warn{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28)}
+  .chip-warn svg{width:13px;height:13px}
+
+  .page{max-width:1200px;margin:0 auto;padding:18px 16px 32px;display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;box-shadow:var(--shadow)}
+  .card-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .card-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+  .card-ic svg{width:19px;height:19px}
+  .ic-blue{background:#eff6ff;border:1px solid #dbeafe;color:#2563eb}
+  .ic-violet{background:#f5f3ff;border:1px solid #ede9fe;color:#7c3aed}
+  .card-head h2{font-size:16.5px;font-weight:700}
+  .card-head p{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  /* ========== 批量查询 ========== */
+  .query-row{display:grid;gap:12px}
+  @media(min-width:720px){.query-row{grid-template-columns:fit-content(560px) auto;align-items:start;justify-content:start}}
+  textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;line-height:1.7;resize:vertical;background:#fbfcfe;font-family:inherit}
+  textarea.mono{font-family:Consolas,"Courier New",monospace}
+  textarea:focus,input[type=text]:focus,input[type=number]:focus{outline:2px solid #bfdbfe;border-color:var(--pri)}
+  textarea[readonly]{background:#f4f6fa}
+  /* 批量查询输入框:宽度由 JS 按最长行自动调节 */
+  #multiDeviceInput{width:auto;min-width:240px;max-width:100%}
+  .query-side{display:flex;flex-direction:column;gap:8px}
+  .tip{font-size:12px;color:var(--muted)}
+  .empty-tip{text-align:center;color:var(--muted);font-size:13px;padding:18px;border:1px dashed var(--line);border-radius:10px;margin-top:14px}
+
+  /* ========== 通用按钮 ========== */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;
+    border:1px solid transparent;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;
+    transition:transform .16s,filter .16s,background .16s,border-color .16s,box-shadow .16s;user-select:none;color:var(--text);background:#fff}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:linear-gradient(135deg,var(--pri),#3b82f6);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.3)}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .btn-ghost{border-color:var(--line);background:#fff}
+  .btn-ghost:hover{border-color:#c6d2e6;background:#f8fafd}
+  .btn-sm{padding:6px 12px;font-size:12.5px;border-radius:8px}
+  .btn-sm svg{width:13px;height:13px}
+  .btn:disabled{background:#eef1f5;color:#a3adc2;cursor:not-allowed;box-shadow:none;filter:none;transform:none}
+
+  /* ========== 操作按钮(行内操作弹窗复用) ========== */
+  .op-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0 6px}
+  @media(min-width:860px){.op-grid{grid-template-columns:repeat(4,1fr)}}
+  .op-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;border-radius:12px;
+    border:1px solid var(--line);background:#fff;font-size:13.5px;font-weight:600;color:var(--text);cursor:pointer;
+    transition:transform .16s,box-shadow .16s,background .16s,border-color .16s}
+  .op-btn svg{width:17px;height:17px;flex:none}
+  .op-btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,32,56,.1)}
+  .op-btn:active{transform:scale(.97)}
+  .op-btn:disabled{cursor:not-allowed;transform:none;box-shadow:none;background:#f3f5f9;color:#a3adc2}
+  .op-btn:disabled svg{color:#a3adc2!important}
+  .op-amber svg{color:#d97706}.op-sky svg{color:#0284c7}.op-green svg{color:#16a34a}
+  .op-teal svg{color:#0d9488}.op-violet svg{color:#7c3aed}.op-indigo svg{color:#4f46e5}
+  .op-amber:hover{border-color:#fcd34d;background:#fffbeb}
+  .op-sky:hover{border-color:#7dd3fc;background:#f0f9ff}
+  .op-green:hover{border-color:#86efac;background:#f0fdf4}
+  .op-teal:hover{border-color:#5eead4;background:#f0fdfa}
+  .op-violet:hover{border-color:#c4b5fd;background:#faf5ff}
+  .op-indigo:hover{border-color:#a5b4fc;background:#eef2ff}
+  .op-btn:disabled:hover{background:#f3f5f9;border-color:var(--line)}
+
+  /* ========== 响应结果 ========== */
+  .res-head{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px}
+  .res-head p{font-size:13.5px;font-weight:700}
+  pre{background:var(--code-bg);color:#c9d1d9;border-radius:12px;padding:14px;overflow:auto;max-height:260px;
+    font-size:12.5px;line-height:1.6;border:1px solid #262d3a}
+  pre code{font-family:Consolas,"Courier New",monospace;background:transparent;padding:0}
+
+  /* ========== 加载遮罩 ========== */
+  #loading{display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.45);align-items:center;justify-content:center}
+  .loading-box{display:flex;align-items:center;gap:10px;background:#fff;color:var(--text);padding:14px 22px;border-radius:12px;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);font-size:14.5px;font-weight:600}
+  .spin{width:18px;height:18px;border-radius:50%;border:3px solid #dbe4f3;border-top-color:var(--pri);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ========== 弹窗 ========== */
+  .modal-wrap{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:14px}
+  .modal-box{width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.3)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:#fff;z-index:2;border-radius:16px 16px 0 0}
+  .modal-head h4{font-size:15.5px;font-weight:700}
+  .modal-x{width:30px;height:30px;border:none;background:#f1f4f9;border-radius:8px;cursor:pointer;display:grid;place-items:center;color:#5b6472}
+  .modal-x:hover{background:#e4e9f2}
+  .modal-x svg{width:15px;height:15px}
+  /* 弹窗头部「← 返回」按钮(打印机操作的下级弹窗用) */
+  .modal-back{height:30px;padding:0 12px;margin-right:8px;border:none;background:#f1f4f9;border-radius:8px;cursor:pointer;
+    display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#5b6472;flex:none}
+  .modal-back:hover{background:#e4e9f2}
+  body.dark .modal-back{background:#243049;color:#c7d2e5}
+  /* 版本更新记录列表 */
+  .ver-his-item{padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.7}
+  .ver-his-item:last-child{border-bottom:none}
+  .ver-his-item b{color:var(--pri)}
+
+  /* ========== 手机版布局(body.mobile:手机/平板访问,或链接带 ?m=1) ========== */
+  body.mobile .topbar{padding:12px}
+  body.mobile .topbar-inner{justify-content:center;gap:10px}
+  body.mobile .brand{flex-direction:column;align-items:center;gap:6px;text-align:center}
+  body.mobile .page{padding:12px 10px 24px;gap:12px}
+  body.mobile .card{padding:14px 12px 16px}
+  body.mobile .btn{padding:12px 16px;font-size:15px}
+  body.mobile .btn-sm{padding:9px 14px}
+  body.mobile .query-row{grid-template-columns:1fr}
+  body.mobile .query-side{width:100%}
+  body.mobile #multiDeviceInput{width:100%!important;min-width:0}
+  /* 输入框 16px:防止 iOS Safari 聚焦时自动放大页面 */
+  body.mobile textarea,body.mobile .modal-body input[type=text],body.mobile .modal-body input[type=number],
+  body.mobile .modal-body select,body.mobile #autoRefreshMin{font-size:16px}
+  /* 弹窗改手机底部抽屉样式 */
+  body.mobile .modal-wrap{padding:0;align-items:flex-end}
+  body.mobile .modal-box{max-width:100%;max-height:92vh;border-radius:16px 16px 0 0}
+  body.mobile .modal-foot{flex-wrap:wrap}
+  body.mobile .modal-foot .btn{flex:1;min-width:120px}
+  body.mobile .mm-input-row{flex-direction:column}
+  body.mobile .chips .chip-opt span{padding:11px 8px}
+  body.mobile .res-head{flex-wrap:wrap;gap:8px}
+  /* 手机版隐藏分享按钮;默认隐藏打印机操作列(输对管理密码后恢复) */
+  body.mobile #shareBtn{display:none}
+  body.mobile:not(.show-ops) .ops-col{display:none}
+  .modal-body{padding:16px 18px}
+  .modal-body label{display:block;font-size:13px;font-weight:600;margin:10px 0 6px}
+  .modal-body input[type=text],.modal-body input[type=number],.modal-body textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
+  .modal-body textarea{font-size:13px;line-height:1.6;resize:vertical}
+  .modal-body textarea.mono{font-family:Consolas,"Courier New",monospace}
+  .modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 16px}
+  .modal-note{font-size:12.5px;color:var(--muted);background:#f6f8fc;border:1px solid #e6ebf4;padding:8px 12px;border-radius:8px;margin:0 0 10px}
+  .chk{display:flex!important;align-items:center;gap:8px;font-size:13.5px!important;font-weight:500!important;margin:8px 0!important;cursor:pointer}
+  .mm-input-row{display:flex;gap:12px;margin:4px 0 10px}
+  .mm-input-row>div{flex:1}
+  .chips{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:6px 0 4px}
+  .chip-opt{position:relative;display:block}
+  .chip-opt input{position:absolute;opacity:0;pointer-events:none}
+  .chip-opt span{display:block;text-align:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;
+    font-size:13.5px;cursor:pointer;transition:.15s;background:#fff}
+  .chip-opt:hover span{border-color:#b9c8e2}
+  .chip-opt input:checked+span{border-color:var(--pri);background:#eff6ff;color:var(--pri);font-weight:700}
+  .chip-opt input:focus-visible+span{outline:2px solid #93c5fd;outline-offset:2px}
+
+  /* 配网二维码弹窗 */
+  .qr-modal .modal-body{text-align:center}
+  .qr-dev{font-family:Consolas,"Courier New",monospace;font-weight:700}
+  .qr-url{font-size:12px;color:var(--muted);word-break:break-all;margin:6px 0 12px}
+  #qrShowBox{display:flex;justify-content:center;align-items:center;padding:12px;background:#fff;border:1px solid var(--line);
+    border-radius:12px;width:fit-content;margin:0 auto;min-height:100px}
+  #qrShowBox img,#qrShowBox canvas{display:block}
+
+  /* ========== 结果表格 ========== */
+  .table-wrap{overflow-x:auto;margin:14px 0 0;border:1px solid var(--line);border-radius:12px}
+  .result-table{width:100%;min-width:960px;border-collapse:collapse;background:#fff}
+  .result-table th{background:#334155;color:#fff;font-size:13px;padding:11px 10px;text-align:left;white-space:nowrap}
+  .result-table td{border-top:1px solid var(--line);padding:10px;font-size:13.5px;vertical-align:middle}
+  .result-table tbody tr:nth-child(even){background:#f8fafd}
+  .result-table tbody tr:hover{background:#eef5ff}
+  .result-table tr.err-row{background:#fef2f2!important}
+  .result-table tr.err-row:hover{background:#fde8e8!important}
+  .dev-cell{font-family:Consolas,"Courier New",monospace;font-weight:600}
+  .cell-mono{font-family:Consolas,"Courier New",monospace;font-size:13px}
+  .err-text{color:var(--err);font-weight:600}
+  .qrcode-text-btn{color:var(--pri);cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .qrcode-text-btn:hover{text-decoration:underline}
+  .qrcode-text-btn svg{width:13px;height:13px}
+  .dev-copy{cursor:pointer}
+  .dev-copy:hover{color:var(--pri)}
+  .dev-copy:hover .dev-id-text{text-decoration:underline}
+  .dev-copy.copied{color:var(--ok)}
+  .dev-copy svg{width:12px;height:12px;margin-left:4px;color:#9aa6bd;vertical-align:-1px}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+  .pill-ok{background:#ecfdf5;color:#15803d}
+  .pill-err{background:#fef2f2;color:#dc2626}
+  .pill-warn{background:#fffbeb;color:#b45309}
+  .pill-gray{background:#f1f4f9;color:#64748b}
+  .sum-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .batch-summary{font-size:12.5px;color:var(--muted);margin:0}
+
+  /* 行内打印机操作 */
+  .modal-ops{grid-template-columns:repeat(2,1fr);margin:8px 0 4px}
+  .cell-dim{color:#c3cad9;text-align:center}
+
+  /* 内容打印工具 */
+  .ops-group{font-size:12.5px;font-weight:700;color:var(--muted);margin:12px 0 2px}
+  .fav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fbfcfe;flex-wrap:wrap}
+  .fav-name{font-weight:700;font-size:13px;flex:none}
+  .fav-cmd{flex:1;min-width:120px;font-family:Consolas,"Courier New",monospace;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fav-item .btn{flex:none}
+  .img-preview{display:block;max-width:240px;width:100%;margin:8px auto;border:1px solid var(--line);border-radius:8px;background:#fff;image-rendering:pixelated}
+  .modal-body input[type=range]{width:100%;margin:4px 0 8px;padding:0;border:none;accent-color:var(--pri)}
+
+  /* 行级编辑器 / 商品清单行 */
+  .line-row,.item-row{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#fbfcfe;flex-wrap:wrap}
+  .line-row input[type=text]{flex:1 1 150px;width:auto!important}
+  .item-row input[type=text]{flex:1 1 130px;width:auto!important}
+  .item-row input[type=number]{width:86px!important;flex:none}
+  .line-row select{padding:5px 6px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;background:#fff;color:var(--text);flex:none}
+  .line-row input[type=checkbox]{flex:none;margin:0}
+  .mini-btn{width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;font-size:13px;line-height:1;color:var(--muted);flex:none;display:inline-flex;align-items:center;justify-content:center}
+  .mini-btn:hover{border-color:var(--pri);color:var(--pri)}
+  .item-amt{font-size:12px;color:var(--muted);min-width:56px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+  .fav-save-row{display:flex;gap:8px;margin:4px 0 8px}
+  .fav-save-row input{flex:1}
+
+  /* 自动刷新 */
+  .auto-refresh-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px}
+  #autoRefreshMin{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
+
+  /* 云端公告条(notice.txt) */
+  .notice-bar{display:flex;align-items:flex-start;gap:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;
+    padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.6}
+  .notice-bar .n-ic{flex:none;font-size:15px}
+  .notice-bar .n-txt{flex:1;white-space:pre-line;word-break:break-word}
+  .notice-bar .n-x{flex:none;width:24px;height:24px;border:none;background:transparent;color:#b45309;cursor:pointer;
+    font-size:15px;line-height:1;border-radius:6px}
+  .notice-bar .n-x:hover{background:#fef3c7}
+
+  /* 深色模式切换按钮 */
+  .theme-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;cursor:pointer;font-family:inherit}
+  .theme-toggle:hover{background:rgba(255,255,255,.24)}
+  .theme-toggle svg{width:13px;height:13px}
+  .theme-toggle .upd-dot{display:none;width:8px;height:8px;border-radius:50%;background:#fbbf24;flex:none}
+  .theme-toggle.has-new{background:rgba(251,191,36,.28);border-color:#fbbf24}
+  .theme-toggle.has-new .upd-dot{display:inline-block}
+
+  /* ========== 深色模式(手动切换,本机记忆) ========== */
+  body.dark{--bg:#0e1420;--card:#151c2b;--line:#28324a;--text:#e3e9f2;--muted:#8e99b3}
+  body.dark .btn{background:#1d2739;color:var(--text)}
+  body.dark .btn-ghost{border-color:var(--line);background:#1d2739}
+  body.dark .btn-ghost:hover{background:#243049}
+  body.dark .btn:disabled{background:#1a2233;color:#5b667e}
+  body.dark textarea,body.dark .modal-body input[type=text],body.dark .modal-body input[type=number],
+  body.dark .modal-body select,body.dark #autoRefreshMin{background:#101726;color:var(--text);border-color:var(--line)}
+  body.dark textarea[readonly]{background:#0d1320}
+  body.dark .chip-opt span,body.dark .op-btn{background:#1d2739;color:var(--text)}
+  body.dark .chip-opt input:checked+span{background:#1c3153;color:#93c5fd;border-color:#3b82f6}
+  body.dark .op-btn:hover{background:#243049}
+  body.dark .op-btn:disabled{background:#1a2233;color:#5b667e}
+  body.dark .modal-box,body.dark .modal-head,body.dark .loading-box{background:#151c2b}
+  body.dark .modal-x{background:#243049;color:#c7d2e5}
+  body.dark .modal-note{background:#101726;border-color:var(--line)}
+  body.dark .empty-tip{border-color:var(--line)}
+  body.dark .line-row,body.dark .item-row,body.dark .fav-item{background:#101726}
+  body.dark .mini-btn{background:#1d2739;color:var(--muted)}
+  body.dark .line-row select{background:#101726;color:var(--text)}
+  body.dark .result-table tbody tr:nth-child(even){background:#131a29}
+  body.dark .result-table tbody tr:hover{background:#18233a}
+  body.dark .result-table tr.err-row{background:#2a1518!important}
+  body.dark .result-table tr.err-row:hover{background:#361a1d!important}
+  body.dark .qrcode-text-btn{color:#7aa5f8}
+  body.dark .pill-ok{background:#0d3524;color:#4ade80}
+  body.dark .pill-err{background:#3a1416;color:#f87171}
+  body.dark .pill-warn{background:#3a2a0d;color:#fbbf24}
+  body.dark .pill-gray{background:#232c40;color:#94a3b8}
+  body.dark .notice-bar{background:#3a2a0d;border-color:#5c440f;color:#fbbf24}
+  body.dark .notice-bar .n-x{color:#fbbf24}
+  body.dark .notice-bar .n-x:hover{background:#4a370f}
+
+  .foot{text-align:center;font-size:12px;color:var(--muted);cursor:pointer}
+  .foot:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>
+      </span>
+      <div>
+        <h1>云打印命令模拟工具</h1>
+        <p>多设备批量查询 · 远程命令下发</p>
+      </div>
+    </div>
+    <span class="chip-warn" id="credChip" role="button" tabindex="0" title="凭据只保存在本机浏览器;点击输入 / 修改" style="cursor:pointer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-3.6 8-10V5.5L12 2 4 5.5V12c0 6.4 8 10 8 10z"/></svg>
+      <span id="credChipTxt">接口凭据</span>
+    </span>
+    <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深色模式" title="切换深色 / 浅色模式">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+      深色
+    </button>
+    <button type="button" class="theme-toggle" id="updateBtn" aria-label="检查更新" title="检测服务器上的最新版本">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      检查更新
+      <span class="upd-dot" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="theme-toggle" id="saveLocalBtn" aria-label="下载本地版" title="把最新在线版保存为本地 html 文件,离线也能用">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      下载本地版
+    </button>
+    <button type="button" class="theme-toggle" id="shareBtn" aria-label="分享手机版" title="生成手机版链接和二维码,发给同事扫码即用">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" x2="15.4" y1="10.5" y2="6.5"/><line x1="8.6" x2="15.4" y1="13.5" y2="17.5"/></svg>
+      分享手机版
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <!-- 云端公告(notice.txt):JS 拉取后显示,可关闭 -->
+  <div id="noticeWrap" style="display:none"></div>
+  <!-- ========== 批量设备信息查询 ========== -->
+  <section class="card">
+    <div class="card-head">
+      <span class="card-ic ic-blue" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </span>
+      <div>
+        <h2>批量设备信息查询</h2>
+        <p>每行填写 1 个设备编号,并发查询网络 / 固件 / 打印状态</p>
+      </div>
+    </div>
+    <div class="query-row">
+      <textarea id="multiDeviceInput" class="mono" rows="6" placeholder="设备1&#10;设备2&#10;设备3" spellcheck="false"></textarea>
+      <div class="query-side">
+        <button type="button" class="btn btn-primary" onclick="batchQueryDevices()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          批量查询设备
+        </button>
+        <p class="tip">点击设备ID可一键复制 · 打印机操作入口在表格行内</p>
+        <div class="auto-refresh-row">
+          <label class="chk" style="margin:0!important"><input type="checkbox" id="autoRefreshChk"> 自动刷新</label>
+          <span>每</span>
+          <input type="number" id="autoRefreshMin" value="30" min="1" max="720">
+          <span>分钟一次</span>
+          <span class="tip" id="autoRefreshStat"></span>
+        </div>
+      </div>
+    </div>
+    <div id="batchResult"><p class="empty-tip">尚未查询 · 输入设备编号后点击「批量查询设备」</p></div>
+  </section>
+
+  <!-- ========== 命令执行响应结果 ========== -->
+  <section class="card">
+    <div class="card-head">
+      <span class="card-ic ic-violet" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><path d="M12 19h8"/></svg>
+      </span>
+      <div>
+        <h2>命令执行响应结果</h2>
+        <p>打印机操作指令下发后云端的返回内容</p>
+      </div>
+    </div>
+    <div class="res-head">
+      <p>命令执行响应结果</p>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="copyRes()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        复制
+      </button>
+    </div>
+    <pre><code id="res" class="json language-json"></code></pre>
+  </section>
+
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.6 · 美化版 · 本地运行   -by:小胡子</footer>
+</main>
+
+<div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
+<input type="file" id="fileInput" style="display:none">
+<script>
+	/* 接口凭据已外置:文件里不再保存,首次使用时输入,本机浏览器永久记忆 */
+	var secretId = "";
+	var secretKey = "";
+	try {
+		secretId = localStorage.getItem("YK_SID") || "";
+		secretKey = localStorage.getItem("YK_SKEY") || "";
+	} catch (e) {}
+	var printer_url="http://14.103.104.106:8081/printer/api.do";
+	/* 深色模式:读取本机记忆,避免刷新后闪白 */
+	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
+	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
+	var APP_VERSION = "2.7.6";
+	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
+	var OPS_PASS = "slh2016";
+	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
+	var VER_HISTORY = [
+		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局;手机版默认隐藏打印机操作列,版本弹窗连点标题 5 次输入管理密码后显示;接口凭据改为外置输入,文件不再内置凭据"],
+		["2.7.5", "打印机操作的下级弹窗支持「← 返回」上级;检测到新版时直接展示更新内容;底部版本号可点开查看更新记录"],
+		["2.7.4", "顶栏新增「下载本地版」:一键把最新在线版保存为本地文件,离线可用"],
+		["2.7.3", "更新源改为 GitHub Pages 优先:改公告 / 发版后自动同步,不再需要手动刷新 CDN 缓存"],
+		["2.7.2", "修复新版下载失败:下载改为多镜像自动换源重试"],
+		["2.7.1", "新增云端公告、在线版入口、新版更新说明"],
+		["2.7.0", "多设备批量查询 / 打印机专属操作 / 内容打印全家桶基础版"]
+	];
+	var UPDATE_URL_KEY = "YK_UPDATE_URL";
+	/* 仓库文件直链工厂:GitHub Pages 优先(提交后约 1 分钟自动更新,缓存最长 10 分钟,无需手动刷 CDN)+ jsDelivr 三镜像 + raw 兜底,依次尝试 */
+	function ghFileUrls(path) {
+		return [
+			"https://mrxiaohuzi.github.io/printer-tool/" + path,
+			"https://fastly.jsdelivr.net/gh/MrXiaoHuZi/printer-tool@main/" + path,
+			"https://gcore.jsdelivr.net/gh/MrXiaoHuZi/printer-tool@main/" + path,
+			"https://testingcf.jsdelivr.net/gh/MrXiaoHuZi/printer-tool@main/" + path,
+			"https://raw.githubusercontent.com/MrXiaoHuZi/printer-tool/main/" + path
+		];
+	}
+	var UPDATE_URLS = ghFileUrls("printer-tool.html");
+	var VERJSON_URLS = ghFileUrls("version.json");
+	var NOTICE_URLS = ghFileUrls("notice.txt");
+	/* GitHub Pages 在线版:开启后免下载直接网页使用,永远是最新版 */
+	var PAGE_URL = "https://mrxiaohuzi.github.io/printer-tool/printer-tool.html";
+	/* 手机版判定:手机/平板访问,或链接带 ?m=1(「分享手机版」生成)→ 启用手机布局 */
+	var IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+		(function () { try { return new URLSearchParams(location.search).get("m") === "1"; } catch (e) { return false; } })();
+	if (IS_MOBILE) document.body.classList.add("mobile");
+</script>
+<script>
+    /* ========== 核心工具(网络层 / 结果渲染 / 弹窗工厂) ========== */
+    function showLoading(show) {
+        document.getElementById("loading").style.display = show ? "flex" : "none";
+    }
+    function toFormData(obj) {
+        const formData = new URLSearchParams();
+        Object.keys(obj).forEach(key => {
+            if (obj[key] !== undefined && obj[key] !== null) {
+                formData.append(key, obj[key]);
+            }
+        });
+        return formData;
+    }
+    /* 网络层:优先原生 fetch(无 CDN 依赖);axios 可用时走 axios。
+       彻底解决 unpkg 被墙导致整个工具不可用的问题。 */
+    function postForm(url, params) {
+        if (window.axios && axios.post) {
+            return axios.post(url, toFormData(params)).then(r => r.data);
+        }
+        if (window.fetch) {
+            return fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+                body: toFormData(params).toString()
+            }).then(r => r.json());
+        }
+        return Promise.reject(new Error("网络库加载失败(fetch / axios 均不可用)"));
+    }
+    /* 结果统一以 textContent 写入(修复原 innerHTML 的 XSS 注入隐患),再做高亮 */
+    function renderRes(data) {
+        const el = document.getElementById("res");
+        const text = (typeof data === "string") ? data : JSON.stringify(data, null, 2);
+        el.removeAttribute("data-highlighted");
+        el.textContent = text || "(空响应)";
+        if (window.hljs && hljs.highlightElement) {
+            try { hljs.highlightElement(el); } catch (e) { /* 高亮失败不影响内容展示 */ }
+        }
+    }
+    function showResError(msg) {
+        const el = document.getElementById("res");
+        el.removeAttribute("data-highlighted");
+        el.textContent = msg;
+    }
+    /* 统一封装:下发十六进制打印指令(合并原 5 处重复代码) */
+    function sendHexCmd(deviceId, cmd, apiKey) {
+        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次操作 */
+        showLoading(true);
+        postForm(printer_url, {
+            apiKey: apiKey || "ec-printer-mqtt-develop-print",
+            secretId: secretId,
+            secretKey: secretKey,
+            deviceId: deviceId,
+            cmd: cmd
+        })
+        .then(data => renderRes(data && data.data ? data.data : data))
+        .catch(() => showResError("执行失败:请求未发出或网络异常"))
+        .finally(() => showLoading(false));
+    }
+    function legacyCopy(text, ok) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); ok(); }
+        catch (e) { alert("复制失败,请手动选择复制"); }
+        ta.remove();
+    }
+    function copyRes() {
+        const t = document.getElementById("res").textContent;
+        if (!t) { alert("暂无结果可复制"); return; }
+        const ok = () => alert("已复制到剪贴板");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(ok, () => legacyCopy(t, ok));
+        } else {
+            legacyCopy(t, ok);
+        }
+    }
+    /* 弹窗工厂:标题用 textContent 写入,避免注入;点遮罩 / × / Esc 关闭 */
+    function closeModalWrap() {
+        const wrap = document.querySelector(".modal-wrap");
+        if (wrap) wrap.remove();
+    }
+    function openModal(title, bodyHtml, footHtml, extraClass) {
+        closeModalWrap();
+        const wrap = document.createElement("div");
+        wrap.className = "modal-wrap";
+        wrap.innerHTML = '<div class="modal-box ' + (extraClass || "") + '">' +
+            '<div class="modal-head"><h4></h4>' +
+            '<button type="button" class="modal-x" aria-label="关闭">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+            "</button></div>" +
+            '<div class="modal-body">' + bodyHtml + "</div>" +
+            (footHtml ? '<div class="modal-foot">' + footHtml + "</div>" : "") +
+            "</div>";
+        wrap.querySelector(".modal-head h4").textContent = title;
+        wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
+        wrap.querySelector(".modal-x").onclick = () => wrap.remove();
+        wrap.querySelectorAll("[data-close]").forEach(b => { b.onclick = () => wrap.remove(); });
+        document.body.appendChild(wrap);
+        return wrap;
+    }
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeModalWrap();
+    });
+    /* 深色模式切换(写入本机记忆) */
+    document.getElementById("themeToggle").onclick = function () {
+        const dark = document.body.classList.toggle("dark");
+        try { localStorage.setItem("YK_THEME", dark ? "dark" : "light"); } catch (e) { /* 隐私模式忽略 */ }
+        this.setAttribute("aria-pressed", dark ? "true" : "false");
+    };
+
+    /* ========== 接口凭据(外置):首次使用时输入,本机永久记忆;顶栏徽章可查看/修改 ========== */
+    function updCredChip() {
+        const t = document.getElementById("credChipTxt");
+        if (t) t.textContent = (secretId && secretKey) ? "接口凭据:已配置" : "接口凭据:未配置 · 点击输入";
+    }
+    function openCredsModal() {
+        const wrap = openModal("接口凭据配置",
+            '<p class="modal-note">凭据只保存在本机浏览器,不会上传任何服务器;换电脑 / 换浏览器需重新输入,凭据向管理员索取</p>' +
+            '<label for="credSid">secretId(凭据 1)</label>' +
+            '<input type="text" id="credSid" autocomplete="off" spellcheck="false" placeholder="粘贴 secretId">' +
+            '<label for="credSkey">secretKey(凭据 2)</label>' +
+            '<input type="text" id="credSkey" autocomplete="off" spellcheck="false" placeholder="粘贴 secretKey">',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="credOk">保存</button>');
+        const sid = wrap.querySelector("#credSid");
+        sid.value = secretId;
+        wrap.querySelector("#credSkey").value = secretKey;
+        sid.focus();
+        wrap.querySelector("#credOk").onclick = function () {
+            const v1 = sid.value.trim();
+            const v2 = wrap.querySelector("#credSkey").value.trim();
+            if (!v1 || !v2) { alert("两个凭据都要填写"); return; }
+            secretId = v1;
+            secretKey = v2;
+            try {
+                localStorage.setItem("YK_SID", v1);
+                localStorage.setItem("YK_SKEY", v2);
+            } catch (e) { /* 隐私模式:仅本次打开有效 */ }
+            updCredChip();
+            wrap.remove();
+            alert("凭据已保存到本机,这台设备以后不用再输");
+        };
+    }
+    document.getElementById("credChip").onclick = openCredsModal;
+    /* 所有联网操作前的凭据检查:没配置就弹出输入框并拦下本次操作 */
+    function ensureCreds() {
+        if (secretId && secretKey) return true;
+        openCredsModal();
+        return false;
+    }
+    updCredChip();
+
+    /* ========== 在线更新:从内置 GitHub 源或自建源地址检测新版并下载 ========== */
+    /* 依次尝试多个源地址(国内对 CDN 域名的干扰时有波动),任一成功即返回其内容与实际地址 */
+    function updFetchText(urls) {
+        let i = 0;
+        function tryOne() {
+            if (i >= urls.length) return Promise.reject(new Error("all failed"));
+            const u = urls[i++];
+            return fetch(u, { cache: "no-store" })
+                .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text().then(t => ({ t: t, u: u })); })
+                .catch(() => tryOne());
+        }
+        return tryOne();
+    }
+    /* 解析远端内容:支持 version.json({version,url,note})、网页里内嵌的版本清单(如语雀文档贴的一行)、或最新版 HTML 本身 */
+    function updParseVer(t) {
+        const s = String(t).trim();
+        /* 1) 整份内容就是 version.json */
+        if (s.charAt(0) === "{") {
+            try {
+                const j = JSON.parse(s);
+                if (j && (j.version || j.v)) {
+                    return { ver: String(j.version || j.v), url: j.url || null, note: j.note || j.changelog || "" };
+                }
+            } catch (e) { /* 不是 JSON,按 HTML 继续 */ }
+        }
+        /* 2) 网页正文里内嵌的 {"version":"x.y","url":"…"} 清单 */
+        const jm = s.match(/\{[^{}]*"version"\s*:\s*"?[\d\.]+"?[^{}]*\}/);
+        if (jm) {
+            try {
+                const j = JSON.parse(jm[0]);
+                if (j && j.version && j.url) return { ver: String(j.version), url: j.url, note: j.note || "" };
+            } catch (e) { /* 内嵌段不是合法 JSON 就忽略 */ }
+        }
+        /* 3) 新版 HTML 本身:读取其中的 APP_VERSION="x.y" */
+        const m = s.match(/APP_VERSION\s*=\s*"([\d\.]+)"/);
+        return m ? { ver: m[1], url: null, note: "" } : null;
+    }
+    /* 版本比较:逐段数字比较,支持 2.9 < 2.10 */
+    function updIsNewer(a, b) {
+        const x = String(a).split(".").map(n => parseInt(n, 10) || 0);
+        const y = String(b).split(".").map(n => parseInt(n, 10) || 0);
+        const len = Math.max(x.length, y.length);
+        for (let i = 0; i < len; i++) {
+            const dx = x[i] || 0, dy = y[i] || 0;
+            if (dx !== dy) return dx > dy;
+        }
+        return false;
+    }
+    /* 静默检测 / 手动检测共享的新版信息;打开更新弹窗时直接展示,不用重新检测 */
+    var updFound = null;
+    function openUpdateModal() {
+        const wrap = openModal("在线更新",
+            '<p class="modal-note">已内置 GitHub 更新源(国内 CDN 加速,多镜像自动切换),留空直接检测即可;也可换成自己服务器的直链(本机记忆)</p>' +
+            '<p class="tip" style="margin:0 0 6px">当前版本:v' + APP_VERSION + '</p>' +
+            "<label for=\"updUrl\">更新源地址</label>" +
+            '<input type="text" id="updUrl" placeholder="留空使用内置源;或填自建直链,如 http://内网服务器/云打印机命令工具.html" autocomplete="off" spellcheck="false">' +
+            '<div class="fav-save-row" style="margin-top:8px">' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="updCheck">检测新版本</button></div>' +
+            '<p class="tip" id="updStat">未检测</p>' +
+            '<div class="modal-note" id="updLog" style="display:none;white-space:pre-line"></div>' +
+            '<div class="fav-save-row" id="updActions" style="display:none">' +
+            '<button type="button" class="btn btn-primary btn-sm" id="updDownload">下载新版</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="updOnline">打开在线版</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="updOpen">打开最新版页面</button></div>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        const inUrl = wrap.querySelector("#updUrl");
+        const stat = wrap.querySelector("#updStat");
+        const actions = wrap.querySelector("#updActions");
+        let newer = null;   /* 检测到的新版信息 {ver,url,note} */
+        try { inUrl.value = localStorage.getItem(UPDATE_URL_KEY) || ""; } catch (e) { /* 忽略 */ }
+        function markBtn() {
+            const b = document.getElementById("updateBtn");
+            if (b) b.classList.add("has-new");
+        }
+        /* 检测到新版时的统一展示:版本号 + 更新内容面板 */
+        function showFound() {
+            stat.textContent = "发现新版本 v" + newer.ver + "(当前 v" + APP_VERSION + ")";
+            const log = wrap.querySelector("#updLog");
+            if (newer.note) {
+                log.textContent = "【v" + newer.ver + " 更新内容】\n" + newer.note;
+                log.style.display = "block";
+            } else { log.style.display = "none"; }
+            actions.style.display = "flex";
+            markBtn();
+        }
+        if (updFound) { newer = updFound; showFound(); }   /* 页面加载时已静默发现过:直接展示,无需再点检测 */
+        wrap.querySelector("#updCheck").onclick = function () {
+            const url = inUrl.value.trim();
+            if (url) { try { localStorage.setItem(UPDATE_URL_KEY, url); } catch (e) { /* 隐私模式忽略 */ } }
+            stat.textContent = "正在检测…";
+            actions.style.display = "none";
+            /* version.json 可选提供更新说明;没建 / 被拦都不影响版本检测 */
+            const noteP = updFetchText(VERJSON_URLS)
+                .then(r => { try { const j = JSON.parse(r.t.trim()); return (j && j.note) ? String(j.note) : ""; } catch (e) { return ""; } })
+                .catch(() => "");
+            /* 自定义地址优先,全部失败时自动落到内置源 */
+            Promise.all([updFetchText(url ? [url].concat(UPDATE_URLS) : UPDATE_URLS), noteP])
+                .then(([res, note]) => {
+                    const info = updParseVer(res.t);
+                    if (!info) { stat.textContent = "已取到内容但解析不到版本号:HTML 里需含 APP_VERSION=\"x.y\",或改用 version.json"; return; }
+                    if (updIsNewer(info.ver, APP_VERSION)) {
+                        newer = { ver: info.ver, url: info.url || res.u, note: note || info.note || "" };
+                        updFound = newer;
+                        showFound();
+                    } else {
+                        newer = null;
+                        stat.textContent = "已是最新版本(v" + APP_VERSION + ")";
+                    }
+                })
+                .catch(() => {
+                    stat.textContent = "读取失败:所有源地址均不可达(多为本机断网,或 CDN 域名被拦截,可换网络再试)";
+                    newer = { ver: "?", url: url || UPDATE_URLS[0], note: "" };
+                    actions.style.display = "flex";
+                });
+        };
+        wrap.querySelector("#updOnline").onclick = function () {
+            window.open(PAGE_URL, "_blank");
+        };
+        wrap.querySelector("#updOpen").onclick = function () {
+            window.open(newer ? newer.url : (inUrl.value.trim() || UPDATE_URLS[0]), "_blank");
+        };
+        wrap.querySelector("#updDownload").onclick = function () {
+            if (!newer) return;
+            stat.textContent = "正在下载…";
+            /* 下载与检测走同一套多镜像链路:单个镜像抖动 / 被拦时自动换源重试 */
+            updFetchText((inUrl.value.trim() ? [inUrl.value.trim()] : []).concat(UPDATE_URLS))
+                .then(res => {
+                    const t = res.t;
+                    /* 已知版本号时统一用具名文件(语雀等附件是哈希文件名,覆盖保存更直观) */
+                    let name = "";
+                    if (newer.ver === "?") {
+                        try { name = decodeURIComponent(String(res.u).split("?")[0].split("/").pop() || ""); } catch (e) { /* 解码失败用默认名 */ }
+                        if (!/\.(html?|json)$/i.test(name)) name = "";
+                    }
+                    if (!name) name = "云打印机命令工具 v" + (newer.ver !== "?" ? newer.ver : "new") + ".html";
+                    const blob = new Blob([t], { type: "text/html;charset=utf-8" });
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = name;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+                    stat.textContent = "已开始下载「" + name + "」:请用新文件替换旧文件后重新打开(浏览器无法自动覆盖本地文件)";
+                })
+                .catch(() => {
+                    /* 异步回调里 window.open 会被浏览器弹窗拦截,改为提示引导 */
+                    stat.textContent = "下载失败:所有源均不可达。可点「打开在线版」直接用最新版,或稍后重试";
+                });
+        };
+    }
+    document.getElementById("updateBtn").onclick = openUpdateModal;
+    /* 一键保存本地版:拉取最新在线版 html 存为本地文件,离线可用(在在线版页面里同样可用) */
+    document.getElementById("saveLocalBtn").onclick = function () {
+        const btn = this;
+        const label = btn.lastChild;
+        btn.disabled = true;
+        label.nodeValue = "下载中…";
+        updFetchText(UPDATE_URLS)
+            .then(res => {
+                const m = res.t.match(/APP_VERSION\s*=\s*"([\d\.]+)"/);
+                const name = "云打印机命令工具 v" + (m ? m[1] : "new") + ".html";
+                const blob = new Blob([res.t], { type: "text/html;charset=utf-8" });
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+            })
+            .catch(() => { alert("下载失败:所有源地址均不可达,请检查网络后重试"); })
+            .finally(() => { btn.disabled = false; label.nodeValue = "下载本地版"; });
+    };
+    /* 分享手机版:二维码 + 链接复制(手机版布局里此按钮自动隐藏) */
+    document.getElementById("shareBtn").onclick = function () {
+        const mUrl = PAGE_URL + "?m=1";
+        const wrap = openModal("分享手机版",
+            '<p class="modal-note">手机扫码直接打开,或复制链接发给同事;手机版自动适配手机布局,功能完全一致</p>' +
+            '<div id="qrShowBox"></div>' +
+            '<div class="fav-save-row"><input type="text" id="shareUrl" readonly>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="shareCopy">复制链接</button></div>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>',
+            "qr-modal");
+        wrap.querySelector("#shareUrl").value = mUrl;
+        const box = wrap.querySelector("#qrShowBox");
+        if (typeof QRCode === "undefined") {
+            box.innerHTML = '<p style="font-size:12px;color:#999;padding:30px 10px;">二维码组件未加载(需联网获取 CDN)</p>';
+        } else {
+            new QRCode(box, { text: mUrl, width: 200, height: 200 });
+        }
+        wrap.querySelector("#shareCopy").onclick = function () {
+            const ok = () => alert("链接已复制,发给同事微信/QQ 即可");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(mUrl).then(ok, function () { legacyCopy(mUrl, ok); });
+            } else { legacyCopy(mUrl, ok); }
+        };
+    };
+    /* 底部版本号:点开查看版本更新记录;手机版连点标题 5 次输管理密码,解锁打印机操作列 */
+    document.getElementById("verFoot").onclick = function () {
+        const rows = VER_HISTORY.map(v =>
+            '<div class="ver-his-item"><b>v' + v[0] + '</b>' +
+            (v[0] === APP_VERSION ? ' <span style="color:var(--ok);font-weight:700">当前</span>' : "") +
+            "<br>" + v[1] + "</div>"
+        ).join("");
+        const wrap = openModal("版本更新记录", "<div>" + rows + "</div>",
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        /* 彩蛋式解锁:手机版下连点弹窗标题 5 次 → 输入管理密码 → 显示打印机操作列(本次有效) */
+        let taps = 0;
+        const h = wrap.querySelector(".modal-head h4");
+        h.style.cursor = "pointer";
+        h.onclick = function () {
+            if (!document.body.classList.contains("mobile")) return;
+            if (++taps < 5) return;
+            taps = 0;
+            wrap.remove();
+            const pw = openModal("解锁打印机操作",
+                '<p class="modal-note">请输入管理密码,解锁表格中的「打印机操作」列(本次打开有效,刷新后恢复隐藏)</p>' +
+                '<input type="password" id="opsPass" placeholder="管理密码" autocomplete="off">',
+                '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+                '<button type="button" class="btn btn-primary" id="opsPassOk">解锁</button>');
+            const inp = pw.querySelector("#opsPass");
+            inp.focus();
+            const tryUnlock = () => {
+                if (inp.value === OPS_PASS) {
+                    pw.remove();
+                    document.body.classList.add("show-ops");
+                    alert("已显示「打印机操作」列");
+                } else {
+                    alert("密码错误");
+                    inp.value = "";
+                    inp.focus();
+                }
+            };
+            pw.querySelector("#opsPassOk").onclick = tryUnlock;
+            inp.onkeydown = e => { if (e.key === "Enter") tryUnlock(); };
+        };
+    };
+    /* 打开页面静默检测一次(未配置地址时走内置 GitHub 源):有新版只在按钮上亮点提示,不弹窗;同时取 version.json 的更新说明,打开弹窗直接展示 */
+    (function updAuto() {
+        let u = null;
+        try { u = localStorage.getItem(UPDATE_URL_KEY); } catch (e) { /* 忽略 */ }
+        const noteP = updFetchText(VERJSON_URLS)
+            .then(r => { try { const j = JSON.parse(r.t.trim()); return (j && j.note) ? String(j.note) : ""; } catch (e) { return ""; } })
+            .catch(() => "");
+        Promise.all([updFetchText((u ? [u] : []).concat(UPDATE_URLS)), noteP])
+            .then(([res, note]) => {
+                const info = updParseVer(res.t);
+                if (info && updIsNewer(info.ver, APP_VERSION)) {
+                    updFound = { ver: info.ver, url: info.url || res.u, note: note || info.note || "" };
+                    document.getElementById("updateBtn").classList.add("has-new");
+                }
+            })
+            .catch(() => { /* 静默失败,不打扰 */ });
+    })();
+    /* 云端公告:拉取 notice.txt(多镜像),有内容则在页顶显示,可关闭;无公告 / 断网时静默 */
+    (function noticeInit() {
+        updFetchText(NOTICE_URLS)
+            .then(res => {
+                const txt = res.t.trim();
+                if (!txt) return;
+                const wrap = document.getElementById("noticeWrap");
+                const bar = document.createElement("div");
+                bar.className = "notice-bar";
+                const ic = document.createElement("span");
+                ic.className = "n-ic";
+                ic.textContent = "📢";
+                const tx = document.createElement("span");
+                tx.className = "n-txt";
+                tx.textContent = txt.length > 500 ? txt.slice(0, 500) + "…" : txt;
+                const x = document.createElement("button");
+                x.type = "button";
+                x.className = "n-x";
+                x.title = "关闭公告";
+                x.textContent = "×";
+                x.onclick = () => { wrap.style.display = "none"; };
+                bar.appendChild(ic);
+                bar.appendChild(tx);
+                bar.appendChild(x);
+                wrap.textContent = "";
+                wrap.appendChild(bar);
+                wrap.style.display = "block";
+            })
+            .catch(() => { /* 静默:无公告或网络不通 */ });
+    })();
+</script>
+<script>
+    /* ========== 批量查询(并发版) ========== */
+    const QR_SM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v.01"/></svg>';
+    const OPS_SM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>';
+    const COPY_SM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    const CSV_SM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>';
+
+    async function apiCall(apiKey, params) {
+        try {
+            const resp = await postForm(printer_url, { apiKey, secretId, secretKey, ...params });
+            return { ok: true, data: resp };
+        } catch (err) {
+            return { ok: false, msg: (err && err.message) || "网络异常" };
+        }
+    }
+    async function queryOneDevice(devId) {
+        /* 打印机状态中文映射 + 徽章配色 */
+        const printStatuses = {
+            "-1": ["其他异常", "pill-err"],
+            "1": ["正常", "pill-ok"],
+            "2": ["缺纸", "pill-warn"],
+            "3": ["开盖", "pill-err"]
+        };
+        const mapConn = ["以太网", "预留", "GPRS", "WIFI", "4G", "5G"];
+        let resultItem = {
+            devId: devId, connMode: "—", version: "—", ip: "—",
+            printerStatusText: "—", printerCss: "",
+            networkStatusText: "—", networkCss: "", errMsg: ""
+        };
+        const r1 = await apiCall("ec-printer-device-mqttInfo", { deviceId: devId });
+        if (!r1.ok) { resultItem.errMsg = r1.msg; return resultItem; }
+        if (!r1.data.data) { resultItem.errMsg = r1.data?.msg || "无状态返回"; return resultItem; }
+        /* 网络状态翻译 + 配色 */
+        const mqttStatus = r1.data.data.status;
+        if (mqttStatus === "ONLINE")      { resultItem.networkStatusText = "在线";     resultItem.networkCss = "pill-ok"; }
+        else if (mqttStatus === "OFFLINE")   { resultItem.networkStatusText = "离线";     resultItem.networkCss = "pill-err"; }
+        else if (mqttStatus === "INACTIVE")  { resultItem.networkStatusText = "从未上线"; resultItem.networkCss = "pill-gray"; }
+        else                               { resultItem.networkStatusText = mqttStatus;  resultItem.networkCss = ""; }
+        const r2 = await apiCall("ec-printer-device-properties", { deviceId: devId, serviceId: "DeviceInfo" });
+        if (r2.ok && r2.data?.data) {
+            const shadow = r2.data.data;
+            resultItem.version = shadow.version || "—";
+            resultItem.connMode = mapConn[shadow.connectionMode] || "未知网络";
+            resultItem.ip = shadow.ip || "—";
+            const ps = printStatuses[String(shadow.printStatus)] || ["未知打印状态", "pill-gray"];
+            resultItem.printerStatusText = ps[0];
+            resultItem.printerCss = ps[1];
+        }
+        return resultItem;
+    }
+    function cell(text, cls) {
+        const td = document.createElement("td");
+        if (cls) td.className = cls;
+        if (text !== undefined && text !== null) td.textContent = text;
+        return td;
+    }
+    function statusPill(text, cls) {
+        if (!cls) return document.createTextNode(text || "—");
+        const s = document.createElement("span");
+        s.className = "pill " + cls;
+        s.textContent = text;
+        return s;
+    }
+    function buildResultRow(item) {
+        const tr = document.createElement("tr");
+        tr.dataset.devid = item.devId;
+        /* 设备ID单元格:点击一键复制 */
+        const tdDev = document.createElement("td");
+        tdDev.className = "dev-cell dev-copy";
+        tdDev.title = "点击复制设备ID";
+        tdDev.tabIndex = 0;
+        tdDev.setAttribute("role", "button");
+        const idSpan = document.createElement("span");
+        idSpan.className = "dev-id-text";
+        idSpan.textContent = item.devId;
+        tdDev.appendChild(idSpan);
+        tdDev.insertAdjacentHTML("beforeend", COPY_SM_ICON);
+        const copyTrigger = ev => { ev.stopPropagation(); copyDeviceId(item.devId, idSpan); };
+        tdDev.onclick = copyTrigger;
+        tdDev.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); copyTrigger(e); } };
+        tr.appendChild(tdDev);
+        /* 配网二维码按钮 */
+        const tdQr = cell();
+        const btn = document.createElement("span");
+        btn.className = "qrcode-text-btn";
+        btn.setAttribute("role", "button");
+        btn.tabIndex = 0;
+        btn.innerHTML = QR_SM_ICON;
+        btn.appendChild(document.createTextNode("配网二维码"));
+        const trigger = ev => { ev.stopPropagation(); openCardQrModal(item.devId); };
+        btn.onclick = trigger;
+        btn.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trigger(e); } };
+        tdQr.appendChild(btn);
+        tr.appendChild(tdQr);
+        if (item.errMsg) {
+            tr.classList.add("err-row");
+            const tdErr = cell("错误:" + item.errMsg, "err-text");
+            tdErr.colSpan = 5;
+            tr.appendChild(tdErr);
+        } else {
+            tr.appendChild(cell(item.connMode));
+            tr.appendChild(cell(item.version, "cell-mono"));
+            tr.appendChild(cell(item.ip, "cell-mono"));
+            /* N617L / N536L / Y626 前缀:云端无打印状态数据,该列不显示 */
+            if (noPrintStatus(item.devId)) {
+                tr.appendChild(cell("—", "cell-dim"));
+            } else {
+                const tdPs = cell();
+                tdPs.appendChild(statusPill(item.printerStatusText, item.printerCss));
+                tr.appendChild(tdPs);
+            }
+            const tdNs = cell();
+            tdNs.appendChild(statusPill(item.networkStatusText, item.networkCss));
+            tr.appendChild(tdNs);
+        }
+        tr.appendChild(buildOpsCell(item.devId)); /* 打印机操作列 */
+        return tr;
+    }
+    async function batchQueryDevices() {
+        const container = document.getElementById("batchResult");
+        container.innerHTML = "";
+        const devList = document.getElementById("multiDeviceInput").value
+            .split(/\r?\n/).map(i => i.trim()).filter(i => i.length > 0);
+        if (devList.length === 0) { alert("请填写至少一个设备ID"); return; }
+        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次查询 */
+        showLoading(true);
+        try {
+            /* 并发查询,保持输入顺序(原串行逐台 await,设备多时极慢) */
+            const items = await Promise.all(devList.map(d => queryOneDevice(d)));
+            lastQueryItems = items;   /* 供 CSV 导出使用 */
+            lastQueryTime = new Date();
+            const tableWrap = document.createElement("div");
+            tableWrap.className = "table-wrap";
+            const table = document.createElement("table");
+            table.className = "result-table";
+            const thead = document.createElement("thead");
+            const trHead = document.createElement("tr");
+            ["设备ID", "配网二维码", "联网方式", "固件版本", "IP地址", "打印机状态", "网络状态", "打印机操作"].forEach(txt => {
+                const th = document.createElement("th");
+                th.textContent = txt;
+                if (txt === "打印机操作") th.className = "ops-col";   /* 手机版默认隐藏此列 */
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+            const tbody = document.createElement("tbody");
+            items.forEach(item => tbody.appendChild(buildResultRow(item)));
+            table.appendChild(tbody);
+            tableWrap.appendChild(table);
+            container.appendChild(tableWrap);
+            const okCount = items.filter(i => !i.errMsg).length;
+            const onlineCount = items.filter(i => i.networkStatusText === "在线").length;
+            const sumRow = document.createElement("div");
+            sumRow.className = "sum-row";
+            const sum = document.createElement("p");
+            sum.className = "batch-summary";
+            sum.textContent = "共查询 " + items.length + " 台 · 成功 " + okCount + " 台 · 在线 " + onlineCount + " 台";
+            sumRow.appendChild(sum);
+            const btnExport = document.createElement("button");
+            btnExport.type = "button";
+            btnExport.className = "btn btn-ghost btn-sm";
+            btnExport.innerHTML = CSV_SM_ICON;
+            btnExport.appendChild(document.createTextNode("导出 CSV 报告"));
+            btnExport.onclick = exportQueryCsv;
+            sumRow.appendChild(btnExport);
+            container.appendChild(sumRow);
+            /* 设备ID单元格自带一键复制,无需整行点击行为 */
+        } catch (e) {
+            const p = document.createElement("p");
+            p.style.cssText = "color:#dc2626;font-size:13px;margin-top:12px;";
+            p.textContent = "查询异常:" + ((e && e.message) || e);
+            container.appendChild(p);
+        } finally {
+            showLoading(false);
+        }
+    }
+    /* ========== 查询结果导出 CSV(概况 + 异常清单 + 全量明细,Excel 可直接打开) ========== */
+    let lastQueryItems = null;
+    let lastQueryTime = null;
+    function csvCell(v) {
+        return '"' + String(v === undefined || v === null ? "" : v).replace(/"/g, '""') + '"';
+    }
+    /* 异常判定:查询失败 / 离线 / 从未上线 / 缺纸 / 开盖 / 其他异常 */
+    function abnormalTypeOf(item) {
+        if (item.errMsg) return "查询失败";
+        if (item.networkStatusText === "离线") return "离线";
+        if (item.networkStatusText === "从未上线") return "从未上线";
+        if (!noPrintStatus(item.devId) && ["缺纸", "开盖", "其他异常"].indexOf(item.printerStatusText) >= 0) {
+            return item.printerStatusText;
+        }
+        return null;
+    }
+    function exportQueryCsv() {
+        if (!lastQueryItems || !lastQueryItems.length) { alert("请先执行批量查询"); return; }
+        const items = lastQueryItems;
+        const okItems = items.filter(i => !i.errMsg);
+        const online = okItems.filter(i => i.networkStatusText === "在线").length;
+        const offline = okItems.filter(i => i.networkStatusText === "离线").length;
+        const inactive = okItems.filter(i => i.networkStatusText === "从未上线").length;
+        const rate = okItems.length ? (online / okItems.length * 100).toFixed(1) : "0.0";
+        const abnormals = items.filter(i => abnormalTypeOf(i) !== null);
+        const d = lastQueryTime || new Date();
+        const p2 = n => String(n).padStart(2, "0");
+        const timeText = d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()) + " " +
+            p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds());
+        const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "_" +
+            p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds());
+        const L = [];
+        L.push("云打印设备查询报告");
+        L.push("");
+        L.push("查询时间," + csvCell(timeText));
+        L.push("设备总数," + items.length + ",查询成功," + okItems.length + ",查询失败," + (items.length - okItems.length));
+        L.push("在线," + online + ",离线," + offline + ",从未上线," + inactive + ",在线率," + rate + "%");
+        L.push("异常设备," + abnormals.length + " 台(含离线 / 从未上线 / 缺纸 / 开盖 / 其他异常 / 查询失败)");
+        L.push("");
+        L.push("一、异常设备清单");
+        L.push("设备ID,异常类型,网络状态,打印机状态,固件版本,IP地址,备注");
+        if (abnormals.length === 0) {
+            L.push("(无异常设备)");
+        } else {
+            abnormals.forEach(i => {
+                const ps = noPrintStatus(i.devId) ? "—" : (i.printerStatusText || "—");
+                L.push([csvCell(i.devId), csvCell(abnormalTypeOf(i)), csvCell(i.errMsg ? "—" : i.networkStatusText),
+                    csvCell(ps), csvCell(i.errMsg ? "—" : i.version), csvCell(i.errMsg ? "—" : i.ip),
+                    csvCell(i.errMsg ? "错误:" + i.errMsg : "")].join(","));
+            });
+        }
+        L.push("");
+        L.push("二、全部设备明细");
+        L.push("设备ID,联网方式,固件版本,IP地址,打印机状态,网络状态,备注");
+        items.forEach(i => {
+            const ps = noPrintStatus(i.devId) ? "—" : (i.printerStatusText || "—");
+            L.push([csvCell(i.devId), csvCell(i.errMsg ? "—" : i.connMode), csvCell(i.errMsg ? "—" : i.version),
+                csvCell(i.errMsg ? "—" : i.ip), csvCell(ps), csvCell(i.errMsg ? "—" : i.networkStatusText),
+                csvCell(i.errMsg ? "错误:" + i.errMsg : "")].join(","));
+        });
+        /* ﻿ BOM:确保 Excel 识别 UTF-8 中文不乱码 */
+        const blob = new Blob(["﻿" + L.join("\r\n")], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "打印设备查询报告_" + stamp + ".csv";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    /* ========== 行内打印机操作(仅 XY58B / XY58C / EC 前缀设备显示) ========== */
+    const OPS_ICON = {
+        restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+        wifi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/><path d="M2 8.8a16 16 0 0 1 20 0"/></svg>',
+        receipt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18l-2.3-1.6L14.4 21 12 19.4 9.6 21l-2.3-1.6L5 21z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg>',
+        tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2H2v10l9.3 9.3a1 1 0 0 0 1.4 0l8.6-8.6a1 1 0 0 0 0-1.4z"/><circle cx="7" cy="7" r="1"/></svg>',
+        droplet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.7s6.5 6.6 6.5 11a6.5 6.5 0 1 1-13 0c0-4.4 6.5-11 6.5-11z"/></svg>',
+        gauge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>',
+        upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>',
+        link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>',
+        type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>',
+        layout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
+        qrcodeic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v.01"/></svg>',
+        image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>',
+        terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>'
+    };
+    /* N617L / N536L / Y626 前缀设备不显示打印机状态列内容 */
+    function noPrintStatus(devId) {
+        const up = String(devId).replace(/\s/g, "").toUpperCase();
+        return up.startsWith("N617L") || up.startsWith("N536L") || up.startsWith("Y626");
+    }
+    /* 设备ID一键复制(clipboard API 优先,失败回退 execCommand) */
+    function copyDeviceId(devId, span) {
+        const done = () => {
+            const prev = span.textContent;
+            span.textContent = "已复制";
+            const td = span.closest("td");
+            if (td) td.classList.add("copied");
+            setTimeout(function () {
+                span.textContent = prev;
+                if (td) td.classList.remove("copied");
+            }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(devId).then(done, function () { legacyCopy(devId, done); });
+        } else {
+            legacyCopy(devId, done);
+        }
+    }
+    /* 是否支持行内操作:XY58B / XY58C / EC 前缀(不区分大小写) */
+    function supportsOps(devId) {
+        const up = String(devId).replace(/\s/g, "").toUpperCase();
+        return up.startsWith("XY58B") || up.startsWith("XY58C") || up.startsWith("EC");
+    }
+    function buildOpsCell(devId) {
+        const td = cell("", "cell-dim ops-col");
+        if (!supportsOps(devId)) {
+            td.textContent = "—";
+            return td;
+        }
+        const btn = document.createElement("span");
+        btn.className = "qrcode-text-btn";
+        btn.setAttribute("role", "button");
+        btn.tabIndex = 0;
+        btn.innerHTML = OPS_SM_ICON;
+        btn.appendChild(document.createTextNode("打印机操作"));
+        const trigger = ev => { ev.stopPropagation(); openOpsModal(devId); };
+        btn.onclick = trigger;
+        btn.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trigger(e); } };
+        td.appendChild(btn);
+        return td;
+    }
+    /* 给当前弹窗加「← 返回」按钮:回到打印机操作菜单(已存在则不重复加) */
+    function opsBackBtn(devId) {
+        const wrap = document.querySelector(".modal-wrap");
+        const head = wrap && wrap.querySelector(".modal-head");
+        if (!head || head.querySelector(".modal-back")) return;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "modal-back";
+        b.textContent = "← 返回";
+        b.onclick = () => { wrap.remove(); openOpsModal(devId); };
+        head.insertBefore(b, head.firstChild);
+    }
+    /* 行内操作弹窗:设备操作 + 内容打印两组,浓度 / 速度仅 EC 前缀显示 */
+    function openOpsModal(devId) {
+        const isEc = String(devId).replace(/\s/g, "").toUpperCase().startsWith("EC");
+        const wrap = openModal("打印机专属操作",
+            '<p class="qr-dev"></p>' +
+            '<p class="modal-note">以下操作将直接下发至该设备</p>' +
+            '<p class="ops-group">设备操作</p>' +
+            '<div class="op-grid modal-ops" id="opsGrid"></div>' +
+            '<p class="ops-group">自定义内容打印</p>' +
+            '<div class="op-grid modal-ops" id="contentGrid"></div>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        wrap.querySelector(".qr-dev").textContent = "设备编号:" + devId;
+        const addOp = (sel, op) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "op-btn " + op.cls;
+            b.innerHTML = OPS_ICON[op.icon];
+            b.appendChild(document.createTextNode(op.label));
+            b.onclick = () => { wrap.remove(); op.run(); opsBackBtn(devId); };
+            wrap.querySelector(sel).appendChild(b);
+        };
+        [
+            { icon: "restart", cls: "op-amber",  label: "重启打印机",    show: true, run: () => executeCommand("RESTART", {}, devId) },
+            { icon: "wifi",    cls: "op-sky",    label: "更换网络配置",  show: true, run: () => promptSwitch(devId) },
+            { icon: "receipt", cls: "op-green",  label: "打印测试小票",  show: true, run: () => printTicket(devId) },
+            { icon: "tag",     cls: "op-teal",   label: "打印测试条码",  show: true, run: () => printBarcode(devId) },
+            { icon: "droplet", cls: "op-violet", label: "54云/YK-58R云改打印浓度", show: isEc, run: () => openDensityModal(devId) },
+            { icon: "gauge",   cls: "op-violet", label: "54云/YK-58R云改打印速度", show: isEc, run: () => openSpeedModal(devId) },
+            { icon: "upload",  cls: "op-indigo", label: "固件文件升级",  show: true, run: () => upgradeFirmware(devId) },
+            { icon: "link",    cls: "op-indigo", label: "固件链接升级",  show: true, run: () => upgradeFirmwareUrl(devId) }
+        ].forEach(op => { if (op.show) addOp("#opsGrid", op); });
+        [
+            { icon: "type",     cls: "op-sky",    label: "任意文本打印",    run: () => printTextModal(devId) },
+            { icon: "layout",   cls: "op-green",  label: "小票编辑·行级",   run: () => printLinesModal(devId) },
+            { icon: "receipt",  cls: "op-amber",  label: "商品清单小票",    run: () => printItemsModal(devId) },
+            { icon: "qrcodeic", cls: "op-teal",   label: "条码/二维码标签", run: () => printLabelModal(devId) },
+            { icon: "tag",      cls: "op-indigo", label: "批量条码/二维码", run: () => printBatchLabelModal(devId) },
+            { icon: "image",    cls: "op-indigo", label: "图片打印",        run: () => printImageModal(devId) },
+            { icon: "terminal", cls: "op-violet", label: "自定义指令·本地收藏", run: () => customCmdModal(devId) }
+        ].forEach(op => addOp("#contentGrid", op));
+    }
+
+    /* 配网二维码弹窗(URL 以 textContent 写入,修复拼接注入隐患) */
+    function openCardQrModal(devId) {
+        const cleanDevId = devId.replace(/\s/g, "");
+        const devUp = cleanDevId.toUpperCase();
+        let qrUrl = null;
+        if (devUp.startsWith("N617") || devUp.startsWith("N536")) {
+            qrUrl = "https://yk1.co/wifi?s=260123&m=SC01&d=" + encodeURIComponent(cleanDevId);
+        } else if (devUp.startsWith("Y626")) {
+            qrUrl = "https://yk1.co/wifi?s=260123&m=SC02&d=" + encodeURIComponent(cleanDevId);
+        } else if (devUp.startsWith("XY58B") || devUp.startsWith("XY58C")) {
+            qrUrl = "https://yk1.co/wifi?s=2503123199&d=" + encodeURIComponent(cleanDevId) + "&m=YK-58C";
+        } else if (devUp.startsWith("EC")) {
+            qrUrl = "https://yk1.co/wifi?s=2503123199&d=" + encodeURIComponent(cleanDevId) + "&m=YK-58yunR";
+        } else {
+            alert("该设备ID前缀不支持生成配网二维码!");
+            return;
+        }
+        const wrap = openModal("配网二维码",
+            '<p class="qr-dev"></p><p class="qr-url"></p><div id="qrShowBox"></div>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>',
+            "qr-modal");
+        wrap.querySelector(".qr-dev").textContent = "设备编号:" + cleanDevId;
+        wrap.querySelector(".qr-url").textContent = qrUrl;
+        const box = wrap.querySelector("#qrShowBox");
+        if (typeof QRCode === "undefined") {
+            box.innerHTML = '<p style="font-size:12px;color:#999;padding:30px 10px;">二维码组件未加载(需联网获取 CDN)</p>';
+        } else {
+            new QRCode(box, { text: qrUrl, width: 220, height: 220 });
+        }
+    }
+
+    /* 批量查询输入框:宽度随最长行内容自动调节(240–560px) */
+    (function autoFitQueryInput() {
+        const ta = document.getElementById("multiDeviceInput");
+        const mirror = document.createElement("span");
+        mirror.style.cssText = "position:absolute;visibility:hidden;white-space:pre;top:-9999px;left:-9999px;";
+        document.body.appendChild(mirror);
+        function fit() {
+            mirror.style.font = getComputedStyle(ta).font;
+            let widest = "设备编号示例 XY58B5084003"; /* 空内容时的基准宽度 */
+            const val = ta.value;
+            if (val) {
+                val.split(/\r?\n/).forEach(line => { if (line.length > widest.length) widest = line; });
+            }
+            mirror.textContent = widest + "00"; /* 留光标余量 */
+            const max = Math.min(560, window.innerWidth - 48);
+            ta.style.width = Math.max(240, Math.min(mirror.offsetWidth + 28, max)) + "px";
+        }
+        ta.addEventListener("input", fit);
+        window.addEventListener("resize", fit);
+        fit();
+    })();
+
+    /* ========== 自动刷新:每 N 分钟自动重查输入框内设备(默认 30 分钟;仅静默刷新,无通知 / 声音) ========== */
+    const AR_KEY = "YK_AUTOREFRESH";
+    let arRemain = 0, arTick = null, arQuerying = false;
+    const arChk = document.getElementById("autoRefreshChk");
+    const arMin = document.getElementById("autoRefreshMin");
+    const arStat = document.getElementById("autoRefreshStat");
+    function arSave() {
+        try { localStorage.setItem(AR_KEY, JSON.stringify({ on: arChk.checked, min: Number(arMin.value) || 30 })); } catch (e) { /* 隐私模式忽略 */ }
+    }
+    function arShowStat() {
+        arStat.textContent = arChk.checked
+            ? "下次刷新 " + Math.floor(arRemain / 60) + ":" + String(arRemain % 60).padStart(2, "0")
+            : "";
+    }
+    function arReset() {
+        arRemain = Math.max(1, Number(arMin.value) || 30) * 60;
+        arShowStat();
+    }
+    function arStop() {
+        if (arTick) { clearInterval(arTick); arTick = null; }
+        arRemain = 0;
+        arStat.textContent = "";
+    }
+    function arStart() {
+        arStop();
+        arSave();
+        if (!arChk.checked) return;
+        arReset();
+        arTick = setInterval(function () {
+            arRemain--;
+            if (arRemain <= 0) {
+                arReset();
+                /* 到点:静默重查一遍当前输入框内的设备;输入为空或上一轮未完成时跳过 */
+                const devs = document.getElementById("multiDeviceInput").value
+                    .split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 0);
+                if (!devs.length || arQuerying) return;
+                arQuerying = true;
+                Promise.resolve(batchQueryDevices()).finally(function () { arQuerying = false; });
+            } else {
+                arShowStat();
+            }
+        }, 1000);
+    }
+    arChk.addEventListener("change", arStart);
+    arMin.addEventListener("change", function () {
+        arMin.value = Math.max(1, Math.min(720, Number(arMin.value) || 30));
+        if (arChk.checked) arReset();
+        arSave();
+    });
+    (function arRestore() {
+        let cfg = null;
+        try { cfg = JSON.parse(localStorage.getItem(AR_KEY) || "null"); } catch (e) { /* 忽略损坏数据 */ }
+        if (cfg && cfg.min) arMin.value = Math.max(1, Math.min(720, Number(cfg.min) || 30));
+        if (cfg && cfg.on) { arChk.checked = true; arStart(); }
+    })();
+</script>
+<script>
+    /* ========== 打印机命令下发(由查询表格「打印机操作」弹窗调用) ========== */
+    function executeCommand(cmd, params, deviceId) {
+        params = params || {};
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次操作 */
+        params.globalId = String(Date.now());
+        showLoading(true);
+        postForm(printer_url, {
+            apiKey: "ec-printer-control-command-send",
+            secretId: secretId,
+            secretKey: secretKey,
+            deviceId: devId,
+            commandName: cmd,
+            paras: JSON.stringify(params)
+        })
+        .then(data => renderRes(data && data.data ? data.data : data))
+        .catch(() => showResError("执行失败:请求未发出或网络异常"))
+        .finally(() => showLoading(false));
+    }
+    /* 更换网络配置:弹窗表单替代原 prompt()(原逻辑在取消密码时会静默无响应) */
+    function promptSwitch(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("更换网络配置",
+            '<label for="wifiSsid">WiFi 名称(SSID)</label>' +
+            '<input type="text" id="wifiSsid" placeholder="例如:Office-2.4G" autocomplete="off">' +
+            '<label for="wifiPsk">WiFi 密码</label>' +
+            '<input type="text" id="wifiPsk" placeholder="WiFi 密码" autocomplete="off">',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="wifiOk">确认下发</button>');
+        const ssidInput = wrap.querySelector("#wifiSsid");
+        ssidInput.focus();
+        wrap.querySelector("#wifiOk").onclick = function () {
+            const ssid = ssidInput.value.trim();
+            const psk = wrap.querySelector("#wifiPsk").value;
+            if (!ssid) { alert("请输入 WiFi 名称"); return; }
+            if (!psk) { alert("请输入 WiFi 密码"); return; }
+            wrap.remove();
+            executeCommand("SWITCH", { ssid, psk }, devId);
+        };
+    }
+    /* 注:单设备输入卡已移除,操作入口在查询表格「打印机操作」列;浓度 / 速度仅 EC 前缀设备显示 */
+</script>
+<script>
+    /* ========== 打印测试条码(CPCL 标签) ========== */
+    function printBarcode(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("打印测试条码(标签)",
+            '<p class="modal-note">CPCL 指令:加粗方框 + 测试文字,按标签尺寸自动生成</p>' +
+            '<div class="mm-input-row">' +
+            '<div><label for="tagWidthMm">标签宽度(mm)</label><input type="number" id="tagWidthMm" value="40" min="10" max="120"></div>' +
+            '<div><label for="tagHeightMm">标签高度(mm)</label><input type="number" id="tagHeightMm" value="30" min="10" max="120"></div>' +
+            "</div>" +
+            '<label class="chk"><input type="checkbox" id="enableEditBarcode"> 允许编辑 CPCL 指令(默认关闭)</label>' +
+            "<label>生成 CPCL 指令</label>" +
+            '<textarea id="barcodeCmd" readonly rows="7" class="mono" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="printBarcodeOk">确认打印</button>');
+        function buildCpcl(wMm, hMm) {
+            const dotPerMm = 8;
+            const wDot = wMm * dotPerMm;
+            const hDot = hMm * dotPerMm;
+            const textX = Math.round(wDot * 0.22);
+            const textY = Math.round(hDot * 0.38);
+            return `! 0 200 200 ${hDot} 1
+PAGE-WIDTH ${wDot}
+SETMAG 2 2
+TEXT 55 0 ${textX} ${textY} 测试
+SETMAG 0 0
+BOX 0 0 ${wDot} ${hDot} 5
+FORM
+PRINT
+`;
+        }
+        const inpW = wrap.querySelector("#tagWidthMm");
+        const inpH = wrap.querySelector("#tagHeightMm");
+        const taCmd = wrap.querySelector("#barcodeCmd");
+        const chkEdit = wrap.querySelector("#enableEditBarcode");
+        taCmd.value = buildCpcl(Number(inpW.value), Number(inpH.value));
+        chkEdit.addEventListener("change", function () {
+            if (this.checked) taCmd.removeAttribute("readonly");
+            else taCmd.setAttribute("readonly", "readonly");
+        });
+        function refreshCmd() {
+            if (chkEdit.checked) return;
+            const w = Number(inpW.value), h = Number(inpH.value);
+            if (isNaN(w) || isNaN(h) || w < 10 || h < 10) return;
+            taCmd.value = buildCpcl(w, h);
+        }
+        inpW.addEventListener("input", refreshCmd);
+        inpH.addEventListener("input", refreshCmd);
+        wrap.querySelector("#printBarcodeOk").onclick = function () {
+            const cmdInput = taCmd.value;
+            if (!cmdInput) { alert("指令不能为空"); return; }
+            wrap.remove();
+            sendHexCmd(devId, cmdInput);
+        };
+    }
+
+    /* ========== 打印测试小票(ESC/POS 十六进制) ========== */
+    var HEX_TICKET_58 = "2B 42 54 43 4F 0D 0A 1B 40 1B 61 02 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BF CD BB A7 C1 AA 0A 1B 61 01 1C 21 00 1B 21 00 1B 21 30 2D 1C 21 00 1B 21 00 1C 21 0C 1B 21 30 B4 F2 D3 A1 B2 E2 CA D4 1C 21 00 1B 21 00 1B 21 30 28 35 38 6D 6D 29 2D 0A 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C5 FA B4 CE 1C 21 00 1B 21 00 1B 21 00 3A 32 36 34 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C8 D5 C6 DA 1C 21 00 1B 21 00 1B 21 00 3A 32 30 32 36 2D 30 38 2D 32 33 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BF EE BA C5 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B5 A5 BC DB 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CA FD C1 BF 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 A1 BC C6 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 41 31 32 32 5F 32 30 20 31 31 39 38 2E 38 20 20 31 36 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 32 29 20 31 39 31 38 30 2E 38 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 41 31 32 33 20 20 20 20 31 31 39 38 2E 38 20 20 31 36 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 32 29 20 31 39 31 38 30 2E 38 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 42 31 32 32 20 20 20 20 31 31 39 38 2E 38 20 20 32 34 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 33 29 20 32 38 37 37 31 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 42 31 32 33 20 20 20 20 31 31 39 38 2E 38 20 20 32 34 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 33 29 20 32 38 37 37 31 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 38 30 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 38 30 29 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D7 DC B6 EE 1C 21 00 1B 21 00 1B 21 00 3A 39 35 39 30 34 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CF D6 BD F0 D6 A7 B8 B6 1C 21 00 1B 21 00 1B 21 00 3A 39 35 39 30 34 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 BB D0 BB BB DD B9 CB 1C 21 00 1B 21 00 1B 21 00 A3 A1 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D4 D9 BC FB 1C 21 00 1B 21 00 1B 21 00 A3 A1 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B5 E7 BB B0 1C 21 00 1B 21 00 1B 21 00 3A 31 35 39 39 30 30 36 35 30 30 37 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B1 B8 D7 A2 1C 21 00 1B 21 00 1B 21 00 3A 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CC E1 D0 D1 1C 21 00 1B 21 00 1B 21 00 A3 BA 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 AE BF EE 1C 21 00 1B 21 00 1B 21 00 A1 A2 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BC FE CA FD C7 EB B5 B1 C3 E6 B5 E3 C7 E5 1C 21 00 1B 21 00 1B 21 00 A3 AC 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C0 EB B5 EA B8 C5 B2 BB B8 BA D4 F0 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 32 30 32 36 2D 30 38 2D 32 39 20 31 38 3A 30 39 3A 35 33 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B0 E6 B1 BE 1C 21 00 1B 21 00 1B 21 00 3A 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C9 CC C2 BD BB A8 1C 21 00 1B 21 00 1B 21 00 56 36 2E 35 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CC D8 B1 F0 CC E1 D0 D1 1C 21 00 1B 21 00 1B 21 00 A3 BA 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D3 C3 C9 CC C2 BD BB A8 1C 21 00 1B 21 00 1B 21 00 7C 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 A6 C6 CC C8 D5 BC C7 C9 A8 C3 E8 B1 BE B5 A5 B6 FE CE AC C2 EB BF C9 D2 D4 D2 BB C3 EB C8 EB BF E2 0A 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C9 A8 C2 EB C8 EB BF E2 C2 EB 0A 1D 28 7D FC 01 03 A3 0A 8C F9 00 16 1A FF FF FC 01 C7 80 78 03 8F FF FF C0 00 01 00 2F 15 01 1E 00 2B BF E0 00 1C 71 C0 FF C7 FF 8E 00 01 5A 00 00 31 E0 00 3C 1E 00 1F 8F 1E 00 20 BF E3 FF 3C 00 07 80 00 1C 0F 3F F1 5A 00 00 0F 1E 00 10 1F 00 3C 00 08 5F 7F C7 A1 F8 FC 5A 00 06 5F 7F C7 F3 F8 E0 1E 00 24 6F 6E C7 E3 F8 FF 8F B4 00 05 5F 0E 00 03 F8 1F 1E 00 22 9F FE 3C 6E 3F FF 7B DD 8F 1F 0E 01 01 9F E0 00 3C 7E 3F FE 3F FC 0F 68 01 04 7F 1C 7E 3F FE 7F FC 0E 1E 00 02 BF EF FF BC 77 F7 9E 7A EF 8F 7F FD 68 01 00 8F FF FF FC 71 C7 0E 78 E3 3A 02 06 3F 71 C7 9E 1E 00 07 7F F8 7D DF FC 38 FB 87 76 02 02 99 00 00 00 0F F8 F0 00 1F 80 90 02 00 02 00 00 94 02 0F 1E 00 29 B0 FF FF 3F FE 38 03 C0 03 F9 E7 8E 4F 00 07 02 00 00 5A 00 0F 1E 00 10 2F 01 80 3C 00 04 AF E0 3F 00 71 C7 9F F8 1C 00 07 5A 00 01 2F E0 7F 1E 00 0E 10 8F 3C 00 17 0E 92 00 00 02 00 00 96 00 B0 03 C1 FF F1 C0 FF 80 03 81 E7 F0 13 00 07 02 00 06 1E 00 1F C0 1E 00 09 5F 7F C0 03 80 C3 3C 00 01 AF 1C 01 C0 00 07 E0 78 FF FF FF A2 03 01 60 1C 01 E0 00 07 F0 1E 00 1F 81 FE 01 00 7F 1C 00 C0 00 07 F0 38 1E 00 04 97 FF CF FF FF C7 1F FF 00 7E AE 00 02 02 00 00 B4 00 01 1E 00 42 9F FF 00 7F 13 00 07 02 00 08 1E 00 0F 3C 00 04 9F FF F7 FE C7 0B DF FF EF 43 2C 01 01 9F 00 78 03 FE 00 01 80 FF 87 E0 01 02 AF 00 78 07 FE 00 03 C0 FF 8F E7 3C 00 01 BF FC 78 FF 76 3F FF 87 FF FF C7 AE F0 00 00 AF FC 79 FC 70 3F FE 07 00 78 07 28 05 01 2F FC 71 1E 00 0A AF 7B FF 76 3A F4 37 7C 7E 1F EF 5A 00 00 BF 00 7F 07 FE 38 60 7F FC 0F 3C 0F 1E 00 05 1F F0 1E 00 05 AF FF FF FF 7E 38 7F F7 7F FE 18 3C 00 01 97 FF C1 FC 7E 38 1F C7 03 F8 62 01 02 02 00 01 68 01 0F 1E 00 28 BF E0 01 C0 7E 07 81 C0 FF 80 3F 8F B4 00 00 6F E0 01 E0 7E 07 83 1E 00 0A 5F 81 80 FF 80 3F B4 00 01 AF E0 78 3C 7E 00 FF F8 1C 78 03 68 01 01 05 1E 00 0F 86 01 02 01 1E 00 4F 7F F8 1C 70 1E 00 02 AF E3 CF 00 71 C7 E0 3F 1C 7F FC 78 00 01 01 1E 00 2F F0 7F 1E 00 0A 4F 3F 1C 7F F8 3C 00 03 92 3C 7E 07 03 FF E3 FF FF FE 5F 01 05 02 00 00 68 01 01 1E 00 1F 83 1E 00 0A 1F 81 1E 00 05 AF 00 00 00 71 C0 1F F8 FF 80 18 B2 02 01 05 1E 00 1F 3C 1E 00 06 5F 0F F8 FF 80 38 1E 00 01 AF FF FF F8 71 DF DF D8 DF 86 3D B4 00 01 00 DC 05 6F FF FF 80 1F 8F 3F 38 04 01 02 1E 00 1F C0 1E 00 04 BF EF FF BC 71 BB FF F8 1F 86 3C F7 1C 02 01 AF 00 1C 00 38 00 78 1F 80 38 7F 1E 00 02 12 3C 1E 00 1F 1C FE 01 01 AF E3 FE 3C 70 3B 0F FF DF BF BC 1E 00 02 9F FF 3C 70 3F 9F C7 FF FF FC 1E 00 23 6F 37 8F FE EB AF E8 96 00 01 9B E3 FF 3C 70 07 80 78 E3 87 B2 00 03 E0 01 00 1E 00 50 00 78 E3 87 E0 12 00 08 02 00 01 FE 01 9C FF 3C 71 C7 A1 F8 FF EF E0 D0 04 05 1E 00 5F F3 C0 1C 7F E0 86 01 01 01 3C 00 0F 1E 00 0B 10 E3 3C 00 0F 5A 00 01 00 F8 07 6F 07 FE 07 FF 80 07 16 08 05 0F 1E 00 09 8F 1C 7E 07 FC 07 FF 80 03 3C 00 01 9F FF FF FC 7E 00 0F C0 00 7F 1C 02 05 3F 7E 00 1F 1E 00 1C 50 00 00 00 15 01 5C 0A 0A 0A 0A 0A 0A 0A 0A ";
+    var HEX_TICKET_110 = "2B 42 54 43 4F 0D 0A 1B 40 1B 61 02 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BF CD BB A7 C1 AA 0A 1B 61 01 1C 21 00 1B 21 00 1B 21 30 2D 1C 21 00 1B 21 00 1C 21 0C 1B 21 30 B4 F2 D3 A1 B2 E2 CA D4 1C 21 00 1B 21 00 1B 21 30 28 31 31 30 6D 6D 29 2D 0A 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C5 FA B4 CE 1C 21 00 1B 21 00 1B 21 00 3A 32 36 34 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C8 D5 C6 DA 1C 21 00 1B 21 00 1B 21 00 3A 32 30 32 36 2D 30 38 2D 32 33 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BF EE BA C5 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C3 FB B3 C6 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 20 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B5 A5 BC DB 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CA FD C1 BF 1C 21 00 1B 21 00 1B 21 00 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 A1 BC C6 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 41 31 32 32 5F 32 30 32 36 2D 30 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B2 E2 CA D4 BF EE 1C 21 00 1B 21 00 1B 21 00 31 20 20 20 20 20 20 20 20 20 20 31 31 39 38 2E 38 20 20 20 20 20 20 31 36 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 32 29 20 20 20 20 20 31 39 31 38 30 2E 38 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 41 31 32 33 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B2 E2 CA D4 BF EE 1C 21 00 1B 21 00 1B 21 00 31 20 20 20 20 20 20 20 20 20 20 31 31 39 38 2E 38 20 20 20 20 20 20 31 36 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 32 29 20 20 20 20 20 31 39 31 38 30 2E 38 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 42 31 32 32 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B2 E2 CA D4 BF EE 1C 21 00 1B 21 00 1B 21 00 31 20 20 20 20 20 20 20 20 20 20 31 31 39 38 2E 38 20 20 20 20 20 20 32 34 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 33 29 20 20 20 20 20 32 38 37 37 31 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 42 31 32 33 20 20 20 20 20 20 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B2 E2 CA D4 BF EE 1C 21 00 1B 21 00 1B 21 00 31 20 20 20 20 20 20 20 20 20 20 31 31 39 38 2E 38 20 20 20 20 20 20 32 34 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 33 29 20 20 20 20 20 32 38 37 37 31 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 2D 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 38 30 28 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 B7 1C 21 00 1B 21 00 1B 21 00 38 30 29 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D7 DC B6 EE 1C 21 00 1B 21 00 1B 21 00 3A 39 35 39 30 34 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CF D6 BD F0 D6 A7 B8 B6 1C 21 00 1B 21 00 1B 21 00 3A 39 35 39 30 34 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 BB D0 BB BB DD B9 CB 1C 21 00 1B 21 00 1B 21 00 A3 A1 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D4 D9 BC FB 1C 21 00 1B 21 00 1B 21 00 A3 A1 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B5 E7 BB B0 1C 21 00 1B 21 00 1B 21 00 3A 31 35 39 39 30 30 36 35 30 30 37 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B1 B8 D7 A2 1C 21 00 1B 21 00 1B 21 00 3A 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CC E1 D0 D1 1C 21 00 1B 21 00 1B 21 00 A3 BA 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C7 AE BF EE 1C 21 00 1B 21 00 1B 21 00 A1 A2 1C 21 00 1B 21 00 1C 21 00 1B 21 00 BC FE CA FD C7 EB B5 B1 C3 E6 B5 E3 C7 E5 1C 21 00 1B 21 00 1B 21 00 A3 AC 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C0 EB B5 EA B8 C5 B2 BB B8 BA D4 F0 0A 1B 61 00 1C 21 00 1B 21 00 1B 21 00 32 30 32 36 2D 30 38 2D 32 39 20 31 37 3A 35 30 3A 30 34 20 20 1C 21 00 1B 21 00 1C 21 00 1B 21 00 B0 E6 B1 BE 1C 21 00 1B 21 00 1B 21 00 3A 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C9 CC C2 BD BB A8 1C 21 00 1B 21 00 1B 21 00 56 36 2E 35 2E 32 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 CC D8 B1 F0 CC E1 D0 D1 1C 21 00 1B 21 00 1B 21 00 A3 BA 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D3 C3 C9 CC C2 BD BB A8 1C 21 00 1B 21 00 1B 21 00 7C 1C 21 00 1B 21 00 1C 21 00 1B 21 00 D0 A6 C6 CC C8 D5 BC C7 C9 A8 C3 E8 B1 BE B5 A5 B6 FE CE AC C2 EB BF C9 D2 D4 D2 BB C3 EB C8 EB BF E2 0A 0A 1B 61 00 1C 21 00 1B 21 00 1C 21 00 1B 21 00 C9 A8 C2 EB C8 EB BF E2 C2 EB 0A 1D 28 7D FC 01 03 68 07 BC F1 00 16 12 FF FF FC 01 C7 80 78 03 8F FF FF C0 00 01 00 2F 15 01 16 00 1B B7 E0 00 1C 71 C0 FF C7 FF 8E 00 01 42 00 31 E0 00 3C 16 00 1F 8F 16 00 10 B7 E3 FF 3C 00 07 80 00 1C 0F 3F F1 42 00 0F 16 00 08 1F 00 2C 00 00 5D 7F C7 A1 F8 FC 42 00 5F 7F C7 F3 F8 E0 16 00 14 6C 6E C7 E3 F8 FF 8F 84 00 5F 0E 00 03 F8 1F 16 00 12 98 FE 3C 6E 3F FF 7B DD 8F 1F C6 00 9B E0 00 3C 7E 3F FE 3F FC 0F 08 01 79 1C 7E 3F FE 7F FC 0E 16 00 B7 EF FF BC 77 F7 9E 7A EF 8F 7F FD 08 01 8D FF FF FC 71 C7 0E 78 E3 A2 01 3E 71 C7 9E 16 00 79 F8 7D DF FC 38 FB 87 CE 01 91 00 00 00 0F F8 F0 00 1F 80 E0 01 00 02 00 00 E4 01 0F 16 00 19 B0 FF FF 3F FE 38 03 C0 03 F9 E7 8E 3F 00 03 42 00 0F 16 00 08 2B 01 80 2C 00 A8 E0 3F 00 71 C7 9F F8 1C 00 07 42 00 2F E0 7F 16 00 06 10 8F 2C 00 11 0E 6C 00 02 6E 00 B0 03 C1 FF F1 C0 FF 80 03 81 E7 F0 13 00 03 84 00 02 16 00 1F C0 16 00 01 58 7F C0 03 80 C3 2C 00 A8 1C 01 C0 00 07 E0 78 FF FF FF AA 02 60 1C 01 E0 00 07 F0 16 00 17 81 76 01 7B 1C 00 C0 00 07 F0 38 16 00 91 FF CF FF FF C7 1F FF 00 7E 80 00 00 02 00 00 4A 01 01 16 00 40 9F FF 00 7F 11 00 01 02 00 08 16 00 0B 2C 00 98 FF F7 FE C7 0B DF FF EF 43 DC 00 99 00 78 03 FE 00 01 80 FF 87 60 01 A8 00 78 07 FE 00 03 C0 FF 8F E7 2C 00 B7 FC 78 FF 76 3F FF 87 FF FF C7 AE B0 00 A8 FC 79 FC 70 3F FE 07 00 78 07 C8 03 2F FC 71 16 00 02 A7 7B FF 76 3A F4 37 7C 7E 1F EF 42 00 BC 00 7F 07 FE 38 60 7F FC 0F 3C 0F 16 00 1C F0 16 00 A8 FF FF FF 7E 38 7F F7 7F FE 18 2C 00 91 FF C1 FC 7E 38 1F C7 03 F8 04 01 00 02 00 01 08 01 0F 16 00 18 B7 E0 01 C0 7E 07 81 C0 FF 80 3F 8F 84 00 6F E0 01 E0 7E 07 83 16 00 02 58 81 80 FF 80 3F 84 00 A8 E0 78 3C 7E 00 FF F8 1C 78 03 08 01 05 16 00 09 1E 01 01 16 00 49 7F F8 1C 70 16 00 A8 E3 CF 00 71 C7 E0 3F 1C 7F FC 58 00 01 16 00 2F F0 7F 16 00 02 4A 3F 1C 7F F8 2C 00 90 3C 7E 07 03 FF E3 FF FF FE 05 01 03 AA 02 01 16 00 1F 83 16 00 02 1C 81 16 00 A8 00 00 00 71 C0 1F F8 FF 80 18 FA 01 05 16 00 1D 3C 16 00 58 0F F8 FF 80 38 16 00 A8 FF FF F8 71 DF DF D8 DF 86 3D 84 00 00 4C 04 68 FF FF 80 1F 8F 3F 18 03 02 16 00 1B C0 16 00 B8 EF FF BC 71 BB FF F8 1F 86 3C F7 8C 01 A9 00 1C 00 38 00 78 1F 80 38 7F 16 00 12 3C 16 00 18 1C 76 01 A9 E3 FE 3C 70 3B 0F FF DF BF BC 16 00 9F FF 3C 70 3F 9F C7 FF FF FC 16 00 13 68 37 8F FE EB AF E8 6E 00 93 E3 FF 3C 70 07 80 78 E3 87 82 00 02 68 02 01 16 00 50 00 78 E3 87 E0 12 00 00 02 00 00 7E 02 A4 E3 FF 3C 71 C7 A1 F8 FF EF E0 88 03 05 16 00 58 F3 C0 1C 7F E0 1E 01 01 2C 00 0F 16 00 03 10 E3 2C 00 08 42 00 00 D8 05 6C 07 FE 07 FF 80 07 EE 05 0F 16 00 01 88 1C 7E 07 FC 07 FF 80 03 2C 00 9C FF FF FC 7E 00 0F C0 00 7F 8C 01 3F 7E 00 1F 16 00 0C 50 00 00 00 15 01 03 0A 0A 0A 0A 0A 0A 0A 0A 2B 42 54 44 49 0D 0A";
+    function printTicket(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        /* XY58B / XY58C 前缀为 58mm 机型:跳过纸宽选择,直接生成 58mm 指令 */
+        const devUp = devId.replace(/\s/g, "").toUpperCase();
+        const only58 = devUp.startsWith("XY58B") || devUp.startsWith("XY58C");
+        function openHexModal(selVal) {
+            const wrap2 = openModal("小票十六进制 ESC 指令",
+                '<p class="modal-note">预置模板指令,可在下发前编辑</p>' +
+                '<textarea id="ticketCmd" rows="8" class="mono" spellcheck="false"></textarea>',
+                '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+                '<button type="button" class="btn btn-primary" id="ticketOk">确认打印</button>');
+            const ta = wrap2.querySelector("#ticketCmd");
+            opsBackBtn(devId);
+            ta.value = (selVal === "110") ? HEX_TICKET_110 : HEX_TICKET_58;
+            wrap2.querySelector("#ticketOk").onclick = function () {
+                const cmdInput = ta.value;
+                if (!cmdInput) { alert("指令不能为空"); return; }
+                wrap2.remove();
+                sendHexCmd(devId, cmdInput);
+            };
+        }
+        if (only58) { openHexModal("58"); return; }
+        const wrap = openModal("打印测试小票 — 选择纸宽",
+            '<p class="modal-note">先选择小票纸张宽度,再生成对应的十六进制 ESC 指令</p>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="paperWidthSel" value="58" checked><span>58mm</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="paperWidthSel" value="110"><span>110mm</span></label>' +
+            "</div>",
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="paperOk">确定</button>');
+        wrap.querySelector("#paperOk").onclick = function () {
+            const selVal = wrap.querySelector('input[name="paperWidthSel"]:checked').value;
+            wrap.remove();
+            openHexModal(selVal);
+        };
+    }
+
+    /* ========== 54云改打印浓度(EC 前缀) ========== */
+    function openDensityModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("54云改打印浓度",
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="densitySel" value="low"><span>低</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="densitySel" value="mid" checked><span>中(默认)</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="densitySel" value="high"><span>高</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="densitySel" value="super"><span>超高</span></label>' +
+            "</div>" +
+            "<label>指令(可复制,不可修改)</label>" +
+            '<textarea id="densityCmd" readonly rows="5" class="mono"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="densityOk">确认发送</button>');
+        const mapDensity = {
+            low: "1B 09 1B FD 01 1B 15 1B 21 30 53 75 63 65 73 73 2D 4C 6F 77 0A 0A 0A 0A 0A 0A ",
+            mid: "1B 09 1B FD 02 1B 15 1B 21 30 53 75 63 65 73 73 2D 4D 65 64 69 75 6D 0A 0A 0A 0A 0A 0A ",
+            high: "1B 09 1B FD 03 1B 15 1B 21 30 53 75 63 65 73 73 2D 48 69 67 68 0A 0A 0A 0A 0A 0A ",
+            "super": "1B 09 1B FD 04 1B 15 1B 21 30 53 75 63 65 73 73 2D 55 6C 74 72 61 20 48 69 67 68 0A 0A 0A 0A 0A 0A "
+        };
+        wrap.querySelector("#densityCmd").value = mapDensity.mid;
+        wrap.querySelectorAll('input[name="densitySel"]').forEach(rd => {
+            rd.onchange = function () {
+                wrap.querySelector("#densityCmd").value = mapDensity[this.value];
+            };
+        });
+        wrap.querySelector("#densityOk").onclick = function () {
+            const cmdInput = wrap.querySelector("#densityCmd").value;
+            if (!cmdInput) { alert("指令不能为空"); return; }
+            wrap.remove();
+            sendHexCmd(devId, cmdInput);
+        };
+    }
+
+    /* ========== 54云改打印速度(EC 前缀) ========== */
+    function openSpeedModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("54云改打印速度",
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="speedSel" value="s60"><span>60mm/s</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="speedSel" value="s100"><span>100mm/s</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="speedSel" value="s127"><span>127mm/s</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="speedSel" value="s150" checked><span>150mm/s(默认)</span></label>' +
+            "</div>" +
+            "<label>指令(可复制,不可修改)</label>" +
+            '<textarea id="speedCmd" readonly rows="5" class="mono"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="speedOk">确认发送</button>');
+        const mapSpeed = {
+            s60: "1B 09 1B 1E 00 1B 15 1B 40 1B 74 16 1B 21 30 1B 61 00 53 75 63 63 65 73 73 20 2D 36 30 6D 6D 2F 73 0A 0A 0A 0A 0A 0A 0A ",
+            s100: "1B 09 1B 1E 01 1B 15 1B 40 1B 74 16 1B 21 30 1B 61 00 53 75 63 63 65 73 73 20 2D 31 30 30 6D 6D 2F 73 0A 0A 0A 0A 0A 0A 0A ",
+            s127: "1B 09 1B 1E 02 1B 15 1B 40 1B 74 16 1B 21 30 1B 61 00 53 75 63 63 65 73 73 20 2D 31 32 37 6D 6D 2F 73 0A 0A 0A 0A 0A 0A 0A ",
+            s150: "1B 09 1B 1E 03 1B 15 1B 40 1B 74 16 1B 21 30 1B 61 00 53 75 63 63 65 73 73 20 2D 31 35 30 6D 6D 2F 73 0A 0A 0A 0A 0A 0A 0A "
+        };
+        wrap.querySelector("#speedCmd").value = mapSpeed.s150;
+        wrap.querySelectorAll('input[name="speedSel"]').forEach(rd => {
+            rd.onchange = function () {
+                wrap.querySelector("#speedCmd").value = mapSpeed[this.value];
+            };
+        });
+        wrap.querySelector("#speedOk").onclick = function () {
+            const cmdInput = wrap.querySelector("#speedCmd").value;
+            if (!cmdInput) { alert("指令不能为空"); return; }
+            wrap.remove();
+            sendHexCmd(devId, cmdInput);
+        };
+    }
+</script>
+<script>
+    /* ========== 内容打印工具:任意文本 / 小票模板 / 条码二维码 / 图片 / 自定义指令 ========== */
+    /* GBK 编码适配:优先使用 gbk.js(CDN,带 unpkg 兜底);未加载时仅支持英文数字 */
+    function gbkEncodeBytes(s) {
+        if (window.GBK && typeof GBK.encode === "function") {
+            try {
+                const r = GBK.encode(s);
+                if (typeof r === "string") { return Array.from(r, ch => ch.charCodeAt(0) & 0xFF); }
+                if (r && typeof r.length === "number") { return Array.from(r, b => Number(b) & 0xFF); }
+            } catch (e) { /* 编码失败按未加载处理 */ }
+        }
+        return null;
+    }
+    /* 行文本 → 字节:ASCII 直接转码,含中文时走 GBK;无法编码返回 null */
+    function encodePrintLine(s) {
+        const out = [];
+        for (const ch of s) {
+            const c = ch.codePointAt(0);
+            if (c < 0x80) { out.push(c); }
+            else {
+                const gb = gbkEncodeBytes(ch);
+                if (!gb) return null;
+                gb.forEach(b => out.push(b));
+            }
+        }
+        return out;
+    }
+    function bytesToHexSpaced(bytes) {
+        return bytes.map(b => (b & 0xFF).toString(16).padStart(2, "0").toUpperCase()).join(" ") + " ";
+    }
+    /* ESC/POS 文本指令:初始化 + 对齐 + 加粗/倍大 + 逐行内容 + 走纸/切刀 */
+    function buildTextHex(text, opts) {
+        const encoded = text.split(/\r?\n/).map(l => encodePrintLine(l));
+        if (encoded.some(e => e === null)) return null;
+        const bytes = [0x1B, 0x40, 0x1B, 0x61, opts.align];
+        if (opts.bold) bytes.push(0x1B, 0x45, 1);
+        if (opts.big) bytes.push(0x1D, 0x21, 0x11);
+        encoded.forEach(e => { e.forEach(b => bytes.push(b)); bytes.push(0x0A); });
+        if (opts.bold) bytes.push(0x1B, 0x45, 0);
+        if (opts.big) bytes.push(0x1D, 0x21, 0x00);
+        for (let i = 0; i < (opts.feed || 0); i++) bytes.push(0x0A);
+        if (opts.cut) bytes.push(0x1D, 0x56, 0x00);
+        return bytesToHexSpaced(bytes);
+    }
+    function pad2Fn(n) { return String(n).padStart(2, "0"); }
+    function nowText() {
+        const d = new Date();
+        return d.getFullYear() + "-" + pad2Fn(d.getMonth() + 1) + "-" + pad2Fn(d.getDate()) + " " +
+            pad2Fn(d.getHours()) + ":" + pad2Fn(d.getMinutes()) + ":" + pad2Fn(d.getSeconds());
+    }
+
+    /* ---------- 1. 任意文本打印 ---------- */
+    function printTextModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("任意文本打印",
+            '<p class="modal-note">输入文字自动转 ESC/POS 指令,支持中英文 / 数字;中文需联网加载编码组件</p>' +
+            '<textarea id="printTextInput" rows="4" placeholder="第一行…&#10;第二行…" spellcheck="false"></textarea>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="textAlign" value="0" checked><span>左对齐</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="textAlign" value="1"><span>居中</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="textAlign" value="2"><span>右对齐</span></label>' +
+            "</div>" +
+            '<label class="chk"><input type="checkbox" id="textBold"> 加粗</label>' +
+            '<label class="chk"><input type="checkbox" id="textBig"> 倍大字号</label>' +
+            '<label class="chk"><input type="checkbox" id="textCut"> 打印后切刀</label>' +
+            "<label>打印后走纸行数</label>" +
+            '<input type="number" id="textFeed" value="3" min="0" max="20">' +
+            "<label>生成指令(只读)</label>" +
+            '<textarea id="textCmd" readonly rows="4" class="mono" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="textOk">确认打印</button>');
+        const ta = wrap.querySelector("#printTextInput");
+        const taCmd = wrap.querySelector("#textCmd");
+        function refresh() {
+            if (!ta.value.trim()) { taCmd.value = ""; return; }
+            const hex = buildTextHex(ta.value, {
+                align: Number(wrap.querySelector('input[name="textAlign"]:checked').value),
+                bold: wrap.querySelector("#textBold").checked,
+                big: wrap.querySelector("#textBig").checked,
+                cut: wrap.querySelector("#textCut").checked,
+                feed: Math.max(0, Math.min(20, Number(wrap.querySelector("#textFeed").value) || 0))
+            });
+            taCmd.value = hex === null ? "(中文编码组件未加载:当前仅支持英文 / 数字)" : hex;
+        }
+        ta.addEventListener("input", refresh);
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll('input[name="textAlign"],#textBold,#textBig,#textCut,#textFeed').forEach(el => {
+                el.addEventListener(evt, refresh);
+            });
+        });
+        refresh();
+        wrap.querySelector("#textOk").onclick = function () {
+            const cmd = taCmd.value;
+            if (!cmd || cmd[0] === "(") { alert("指令为空或中文编码组件未加载"); return; }
+            wrap.remove();
+            sendHexCmd(devId, cmd);
+        };
+    }
+
+    /* ---------- 2. 行级小票编辑器 + 商品清单 + 批量条码二维码 ---------- */
+    /* 条码内容校验(单张标签 / 批量打印共用) */
+    function codeDataErr(type, data) {
+        if (!data) return "请输入打印内容";
+        if (type === "code128" && /[^\x20-\x7E]/.test(data)) return "CODE128 仅支持英文 / 数字 / 常用符号";
+        if (type === "code39" && !/^[0-9A-Za-z\-\.\$\/\+\% ]+$/.test(data)) return "CODE39 仅支持字母 / 数字 / - . $ / + % 空格";
+        if (type === "ean13" && !/^\d{12,13}$/.test(data)) return "EAN13 需要 12-13 位数字";
+        return "";
+    }
+    /* ESC/POS 条码 / 二维码指令段(单张标签 / 批量打印共用);写入 bytes,失败返回 false */
+    function escposPushCode(bytes, type, data, o) {
+        o = o || {};
+        if (type === "qr") {
+            /* 标准 GS ( k 49 系列:模型2 → 模块大小 → 纠错M → 存数据 → 打印 */
+            const e = encodePrintLine(data);
+            if (e === null) return false;
+            const mag = Math.max(3, Math.min(8, o.mag || 5));
+            const len = e.length + 3;
+            bytes.push(0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x50, 0x32, 0x00);
+            bytes.push(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, mag);
+            bytes.push(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x4D);
+            bytes.push(0x1D, 0x28, 0x6B, len & 0xFF, (len >> 8) & 0xFF, 0x31, 0x50);
+            e.forEach(b => bytes.push(b));
+            bytes.push(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30);
+        } else {
+            /* GS k 功能B:ean13=67 / code39=69 / code128=73;CODE128 数据需 {B 编码集前缀 */
+            const bh = Math.max(40, Math.min(240, o.bh || 96));
+            let m, sendData;
+            if (type === "ean13") { m = 0x43; sendData = data; }
+            else if (type === "code39") { m = 0x45; sendData = data.toUpperCase(); }
+            else { m = 0x49; sendData = "{B" + data; }
+            const e = Array.from(sendData, ch => ch.charCodeAt(0) & 0xFF);
+            bytes.push(0x1D, 0x68, bh);                                   /* 条码高度(点) */
+            bytes.push(0x1D, 0x77, Math.max(2, Math.min(6, o.narrow || 2))); /* 窄条宽度(点) */
+            bytes.push(0x1D, 0x48, 0x02);                                 /* HRI 字符印在条码下方 */
+            bytes.push(0x1D, 0x6B, m, e.length);
+            e.forEach(b => bytes.push(b));
+        }
+        return true;
+    }
+    /* GS !(1D 21)字号:1-4 倍 → 00/11/22/33 */
+    const sizeByteFn = k => ((((k || 1) - 1) << 4) | ((k || 1) - 1)) & 0xFF;
+
+    /* ---------- 2a. 行级小票编辑器(每行独立对齐 / 加粗 / 字号,↑↓ 调顺序,可存模板) ---------- */
+    const TPL_FAV_KEY = "YK_TPL_FAV";
+    function loadTplFavs() { try { return JSON.parse(localStorage.getItem(TPL_FAV_KEY) || "[]"); } catch (e) { return []; } }
+    function saveTplFavs(l) { try { localStorage.setItem(TPL_FAV_KEY, JSON.stringify(l)); } catch (e) { /* 隐私模式忽略 */ } }
+    function printLinesModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("小票编辑器(行级)",
+            '<p class="modal-note">每行独立设置对齐 / 加粗 / 字号,↑↓ 调整行顺序;参数可存为模板复用</p>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="linePaper" value="58" checked><span>58mm</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="linePaper" value="110"><span>110mm</span></label>' +
+            "</div>" +
+            '<p class="ops-group">内容行(从上到下依次打印)</p>' +
+            '<div id="lineList"></div>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="lineAdd">+ 添加一行</button>' +
+            '<label class="chk"><input type="checkbox" id="lineCut"> 打印后切刀</label>' +
+            "<label for=\"lineFeed\">打印后走纸行数</label>" +
+            '<input type="number" id="lineFeed" value="3" min="0" max="20">' +
+            '<p class="ops-group">模板收藏(本机保存,最多 30 条)</p>' +
+            '<div class="fav-save-row"><input type="text" id="tplFavName" placeholder="模板名称,如:堂食小票" autocomplete="off">' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="tplFavSave">保存</button></div>' +
+            '<div id="tplFavList"></div>' +
+            "<label>预览(只读)</label>" +
+            '<textarea id="linePreview" readonly rows="10" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="lineOk">确认打印</button>');
+        /* 行数据:t=文字 a=对齐(0左1中2右) b=加粗 s=字号1-4 */
+        let lines = [
+            { t: "", a: 1, b: true, s: 2 },
+            { t: "", a: 0, b: false, s: 1 },
+            { t: "", a: 0, b: false, s: 1 }
+        ];
+        const listEl = wrap.querySelector("#lineList");
+        const taPreview = wrap.querySelector("#linePreview");
+        function miniBtn(txt, fn) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "mini-btn";
+            b.textContent = txt;
+            b.onclick = fn;
+            return b;
+        }
+        function mkSelect(opts, val, fn) {
+            const s = document.createElement("select");
+            opts.forEach(o => {
+                const op = document.createElement("option");
+                op.value = o[0];
+                op.textContent = o[1];
+                s.appendChild(op);
+            });
+            s.value = String(val);
+            s.onchange = function () { fn(this.value); refresh(); };
+            return s;
+        }
+        function renderLines() {
+            listEl.textContent = "";
+            lines.forEach((ln, i) => {
+                const row = document.createElement("div");
+                row.className = "line-row";
+                row.appendChild(miniBtn("↑", () => {
+                    if (i > 0) { const t = lines[i - 1]; lines[i - 1] = lines[i]; lines[i] = t; renderLines(); refresh(); }
+                }));
+                row.appendChild(miniBtn("↓", () => {
+                    if (i < lines.length - 1) { const t = lines[i + 1]; lines[i + 1] = lines[i]; lines[i] = t; renderLines(); refresh(); }
+                }));
+                const txt = document.createElement("input");
+                txt.type = "text";
+                txt.placeholder = "第 " + (i + 1) + " 行内容";
+                txt.value = ln.t;
+                txt.autocomplete = "off";
+                txt.oninput = function () { ln.t = this.value; refresh(); };
+                row.appendChild(txt);
+                row.appendChild(mkSelect([["0", "左"], ["1", "中"], ["2", "右"]], ln.a, v => { ln.a = Number(v); }));
+                row.appendChild(mkSelect([["1", "1×"], ["2", "2×"], ["3", "3×"], ["4", "4×"]], ln.s, v => { ln.s = Number(v); }));
+                const chk = document.createElement("input");
+                chk.type = "checkbox";
+                chk.checked = ln.b;
+                chk.title = "加粗";
+                chk.onchange = function () { ln.b = this.checked; refresh(); };
+                row.appendChild(chk);
+                row.appendChild(miniBtn("×", () => { lines.splice(i, 1); renderLines(); refresh(); }));
+                listEl.appendChild(row);
+            });
+        }
+        function paperWidth() { return wrap.querySelector('input[name="linePaper"]:checked').value === "110" ? 46 : 31; }
+        function refresh() {
+            const w = paperWidth();
+            taPreview.value = lines.map(ln => {
+                if (ln.a === 1) return " ".repeat(Math.max(0, Math.floor((w - ln.t.length) / 2))) + ln.t;
+                if (ln.a === 2) return " ".repeat(Math.max(0, w - ln.t.length)) + ln.t;
+                return ln.t;
+            }).join("\n");
+        }
+        function buildHex() {
+            const bytes = [0x1B, 0x40];
+            let ok = true;
+            lines.forEach(ln => {
+                const e = encodePrintLine(ln.t);
+                if (e === null) { ok = false; return; }
+                bytes.push(0x1B, 0x61, ln.a);                 /* 每行独立对齐 */
+                if (ln.b) bytes.push(0x1B, 0x45, 1);          /* 加粗开 */
+                const sz = sizeByteFn(ln.s);
+                if (sz) bytes.push(0x1D, 0x21, sz);           /* 每行独立字号 */
+                e.forEach(b => bytes.push(b));
+                bytes.push(0x0A);
+                if (sz) bytes.push(0x1D, 0x21, 0x00);
+                if (ln.b) bytes.push(0x1B, 0x45, 0);          /* 加粗关 */
+            });
+            if (!ok) return null;
+            const feed = Math.max(0, Math.min(20, Number(wrap.querySelector("#lineFeed").value) || 0));
+            for (let i = 0; i < feed; i++) bytes.push(0x0A);
+            if (wrap.querySelector("#lineCut").checked) bytes.push(0x1D, 0x56, 0x00);
+            return bytesToHexSpaced(bytes);
+        }
+        function curCfg() {
+            return {
+                lines: lines.map(l => ({ t: l.t, a: l.a, b: l.b, s: l.s })),
+                paper: wrap.querySelector('input[name="linePaper"]:checked').value,
+                cut: wrap.querySelector("#lineCut").checked,
+                feed: Number(wrap.querySelector("#lineFeed").value) || 0
+            };
+        }
+        function applyCfg(c) {
+            lines = (c.lines || []).map(l => ({ t: l.t || "", a: Number(l.a) || 0, b: !!l.b, s: Number(l.s) || 1 }));
+            if (!lines.length) lines = [{ t: "", a: 0, b: false, s: 1 }];
+            const rd = wrap.querySelector('input[name="linePaper"][value="' + (c.paper === "110" ? "110" : "58") + '"]');
+            if (rd) rd.checked = true;
+            wrap.querySelector("#lineCut").checked = !!c.cut;
+            wrap.querySelector("#lineFeed").value = c.feed || 3;
+            renderLines();
+            refresh();
+        }
+        function renderFavs() {
+            const box = wrap.querySelector("#tplFavList");
+            box.textContent = "";
+            const favs = loadTplFavs();
+            if (!favs.length) {
+                const p = document.createElement("p");
+                p.className = "tip";
+                p.textContent = "暂无模板:编辑好内容后填名称点「保存」";
+                box.appendChild(p);
+                return;
+            }
+            favs.forEach(fav => {
+                const item = document.createElement("div");
+                item.className = "fav-item";
+                const name = document.createElement("span");
+                name.className = "fav-name";
+                name.textContent = fav.n;
+                const meta = document.createElement("span");
+                meta.className = "fav-cmd";
+                meta.textContent = (fav.c.lines || []).length + " 行 · " + (fav.c.paper === "110" ? "110mm" : "58mm");
+                const btnLoad = document.createElement("button");
+                btnLoad.type = "button";
+                btnLoad.className = "btn btn-primary btn-sm";
+                btnLoad.textContent = "载入";
+                btnLoad.onclick = () => applyCfg(fav.c);
+                const btnDel = document.createElement("button");
+                btnDel.type = "button";
+                btnDel.className = "btn btn-ghost btn-sm";
+                btnDel.textContent = "删除";
+                btnDel.onclick = () => { saveTplFavs(loadTplFavs().filter(x => x.n !== fav.n)); renderFavs(); };
+                item.appendChild(name);
+                item.appendChild(meta);
+                item.appendChild(btnLoad);
+                item.appendChild(btnDel);
+                box.appendChild(item);
+            });
+        }
+        wrap.querySelector("#lineAdd").onclick = () => { lines.push({ t: "", a: 0, b: false, s: 1 }); renderLines(); refresh(); };
+        wrap.querySelector("#tplFavSave").onclick = () => {
+            const n = wrap.querySelector("#tplFavName").value.trim();
+            if (!n) { alert("请填写模板名称"); return; }
+            const favs = loadTplFavs().filter(x => x.n !== n);
+            favs.unshift({ n: n, c: curCfg() });
+            saveTplFavs(favs.slice(0, 30));
+            wrap.querySelector("#tplFavName").value = "";
+            renderFavs();
+        };
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll("#lineFeed,#lineCut,input[name=linePaper]").forEach(el => el.addEventListener(evt, refresh));
+        });
+        renderLines();
+        refresh();
+        renderFavs();
+        wrap.querySelector("#lineOk").onclick = function () {
+            const hex = buildHex();
+            if (hex === null) { alert("中文编码组件未加载:请改用英文或稍后重试"); return; }
+            wrap.remove();
+            sendHexCmd(devId, hex);
+        };
+    }
+
+    /* ---------- 2b. 商品清单小票(名称/单价/数量 → 自动小计合计,清单可收藏) ---------- */
+    const ITEMS_FAV_KEY = "YK_ITEMS_FAV";
+    function loadItemFavs() { try { return JSON.parse(localStorage.getItem(ITEMS_FAV_KEY) || "[]"); } catch (e) { return []; } }
+    function saveItemFavs(l) { try { localStorage.setItem(ITEMS_FAV_KEY, JSON.stringify(l)); } catch (e) { /* 隐私模式忽略 */ } }
+    function printItemsModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("商品清单小票",
+            '<p class="modal-note">填写商品自动计算小计与合计;整张清单可存为收藏复用</p>' +
+            '<div class="mm-input-row">' +
+            '<div><label for="itShop">店名(可选)</label><input type="text" id="itShop" placeholder="例如:张三小店" autocomplete="off"></div>' +
+            "</div>" +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="itPaper" value="58" checked><span>58mm</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="itPaper" value="110"><span>110mm</span></label>' +
+            "</div>" +
+            '<p class="ops-group">商品(名称 / 单价 / 数量)</p>' +
+            '<div id="itemRows"></div>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="itemAdd">+ 添加商品</button>' +
+            '<label class="chk"><input type="checkbox" id="itTime" checked> 打印时间</label>' +
+            '<label class="chk"><input type="checkbox" id="itCut"> 打印后切刀</label>' +
+            '<p class="ops-group">清单收藏(本机保存,最多 30 条)</p>' +
+            '<div class="fav-save-row"><input type="text" id="itFavName" placeholder="收藏名称,如:常用菜单" autocomplete="off">' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="itFavSave">保存</button></div>' +
+            '<div id="itFavList"></div>' +
+            "<label>预览(只读)</label>" +
+            '<textarea id="itPreview" readonly rows="10" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="itOk">确认打印</button>');
+        let items = [{ n: "", p: "", q: 1 }, { n: "", p: "", q: 1 }, { n: "", p: "", q: 1 }];
+        const rowsEl = wrap.querySelector("#itemRows");
+        function amountOf(it) { return (Number(it.p) || 0) * (Number(it.q) || 0); }
+        function paperW() { return wrap.querySelector('input[name="itPaper"]:checked').value === "110" ? 46 : 31; }
+        function renderItems() {
+            rowsEl.textContent = "";
+            items.forEach((it, i) => {
+                const row = document.createElement("div");
+                row.className = "item-row";
+                const del = document.createElement("button");
+                del.type = "button";
+                del.className = "mini-btn";
+                del.textContent = "×";
+                del.onclick = () => { items.splice(i, 1); renderItems(); refresh(); };
+                const name = document.createElement("input");
+                name.type = "text";
+                name.placeholder = "商品 " + (i + 1);
+                name.value = it.n;
+                name.autocomplete = "off";
+                const price = document.createElement("input");
+                price.type = "number";
+                price.step = "0.01";
+                price.min = "0";
+                price.placeholder = "单价";
+                price.value = it.p;
+                const qty = document.createElement("input");
+                qty.type = "number";
+                qty.step = "1";
+                qty.min = "0";
+                qty.placeholder = "数量";
+                qty.value = it.q;
+                const amt = document.createElement("span");
+                amt.className = "item-amt";
+                amt.title = "小计";
+                const upd = () => {
+                    it.n = name.value; it.p = price.value; it.q = qty.value;
+                    amt.textContent = amountOf(it).toFixed(2);
+                    refresh();
+                };
+                name.oninput = upd;
+                price.oninput = upd;
+                qty.oninput = upd;
+                amt.textContent = amountOf(it).toFixed(2);
+                row.appendChild(del);
+                row.appendChild(name);
+                row.appendChild(price);
+                row.appendChild(qty);
+                row.appendChild(amt);
+                rowsEl.appendChild(row);
+            });
+        }
+        /* 组装商品行:名称靠左、数量*单价 小计 靠右,中间空格补齐 */
+        function composeRows() {
+            const w = paperW();
+            return items.filter(it => it.n.trim()).map(it => {
+                const right = (Number(it.q) || 0) + "*" + (Number(it.p) || 0).toFixed(2) + " " + amountOf(it).toFixed(2);
+                const maxName = Math.max(1, w - right.length - 1);
+                const nm = it.n.length > maxName ? it.n.slice(0, maxName) : it.n;
+                return nm + " ".repeat(Math.max(1, w - nm.length - right.length)) + right;
+            });
+        }
+        function totalAmt() { return items.reduce((s, it) => s + (it.n.trim() ? amountOf(it) : 0), 0); }
+        function refresh() {
+            const w = paperW();
+            const dash = "-".repeat(w);
+            const shop = wrap.querySelector("#itShop").value.trim();
+            const L = [];
+            if (shop) L.push(" ".repeat(Math.max(0, Math.floor((w - shop.length * 2) / 2))) + shop);
+            L.push(dash);
+            composeRows().forEach(l => L.push(l));
+            L.push(dash);
+            L.push("合计: " + totalAmt().toFixed(2));
+            if (wrap.querySelector("#itTime").checked) L.push("时间: " + nowText());
+            L.push(dash);
+            wrap.querySelector("#itPreview").value = L.join("\n");
+        }
+        function buildHex() {
+            const dash = "-".repeat(paperW());
+            const bytes = [0x1B, 0x40];
+            let ok = true;
+            const push = (s, opt) => {
+                const e = encodePrintLine(s);
+                if (e === null) { ok = false; return; }
+                opt = opt || {};
+                bytes.push(0x1B, 0x61, opt.align || 0);
+                if (opt.bold) bytes.push(0x1B, 0x45, 1);
+                const sz = opt.size ? sizeByteFn(opt.size) : 0;
+                if (sz) bytes.push(0x1D, 0x21, sz);
+                e.forEach(b => bytes.push(b));
+                bytes.push(0x0A);
+                if (sz) bytes.push(0x1D, 0x21, 0x00);
+                if (opt.bold) bytes.push(0x1B, 0x45, 0);
+            };
+            const shop = wrap.querySelector("#itShop").value.trim();
+            if (shop) push(shop, { align: 1, size: 2 });   /* 店名居中 2 倍 */
+            push(dash, {});
+            composeRows().forEach(l => push(l, {}));
+            push(dash, {});
+            push("合计: " + totalAmt().toFixed(2), { bold: true });
+            if (wrap.querySelector("#itTime").checked) push("时间: " + nowText(), {});
+            push(dash, {});
+            bytes.push(0x0A, 0x0A, 0x0A);
+            if (wrap.querySelector("#itCut").checked) bytes.push(0x1D, 0x56, 0x00);
+            if (!ok) return null;
+            return bytesToHexSpaced(bytes);
+        }
+        function curCfg() {
+            return {
+                shop: wrap.querySelector("#itShop").value.trim(),
+                items: items.map(i => ({ n: i.n, p: i.p, q: i.q })),
+                paper: wrap.querySelector('input[name="itPaper"]:checked').value,
+                time: wrap.querySelector("#itTime").checked,
+                cut: wrap.querySelector("#itCut").checked
+            };
+        }
+        function applyCfg(c) {
+            wrap.querySelector("#itShop").value = c.shop || "";
+            items = (c.items || []).map(i => ({ n: i.n || "", p: i.p || "", q: i.q || 1 }));
+            if (!items.length) items = [{ n: "", p: "", q: 1 }];
+            const rd = wrap.querySelector('input[name="itPaper"][value="' + (c.paper === "110" ? "110" : "58") + '"]');
+            if (rd) rd.checked = true;
+            wrap.querySelector("#itTime").checked = c.time !== false;
+            wrap.querySelector("#itCut").checked = !!c.cut;
+            renderItems();
+            refresh();
+        }
+        function renderFavs() {
+            const box = wrap.querySelector("#itFavList");
+            box.textContent = "";
+            const favs = loadItemFavs();
+            if (!favs.length) {
+                const p = document.createElement("p");
+                p.className = "tip";
+                p.textContent = "暂无收藏:填好商品后存一份,下次一键载入";
+                box.appendChild(p);
+                return;
+            }
+            favs.forEach(fav => {
+                const item = document.createElement("div");
+                item.className = "fav-item";
+                const name = document.createElement("span");
+                name.className = "fav-name";
+                name.textContent = fav.n;
+                const meta = document.createElement("span");
+                meta.className = "fav-cmd";
+                meta.textContent = (fav.c.items || []).length + " 件商品 · " + (fav.c.paper === "110" ? "110mm" : "58mm");
+                const btnLoad = document.createElement("button");
+                btnLoad.type = "button";
+                btnLoad.className = "btn btn-primary btn-sm";
+                btnLoad.textContent = "载入";
+                btnLoad.onclick = () => applyCfg(fav.c);
+                const btnDel = document.createElement("button");
+                btnDel.type = "button";
+                btnDel.className = "btn btn-ghost btn-sm";
+                btnDel.textContent = "删除";
+                btnDel.onclick = () => { saveItemFavs(loadItemFavs().filter(x => x.n !== fav.n)); renderFavs(); };
+                item.appendChild(name);
+                item.appendChild(meta);
+                item.appendChild(btnLoad);
+                item.appendChild(btnDel);
+                box.appendChild(item);
+            });
+        }
+        wrap.querySelector("#itemAdd").onclick = () => { items.push({ n: "", p: "", q: 1 }); renderItems(); refresh(); };
+        wrap.querySelector("#itFavSave").onclick = () => {
+            const n = wrap.querySelector("#itFavName").value.trim();
+            if (!n) { alert("请填写收藏名称"); return; }
+            if (!items.some(i => i.n.trim())) { alert("请至少填写一件商品"); return; }
+            const favs = loadItemFavs().filter(x => x.n !== n);
+            favs.unshift({ n: n, c: curCfg() });
+            saveItemFavs(favs.slice(0, 30));
+            wrap.querySelector("#itFavName").value = "";
+            renderFavs();
+        };
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll("#itShop,#itTime,input[name=itPaper]").forEach(el => el.addEventListener(evt, refresh));
+        });
+        renderItems();
+        refresh();
+        renderFavs();
+        wrap.querySelector("#itOk").onclick = function () {
+            if (!items.some(i => i.n.trim())) { alert("请至少填写一件商品"); return; }
+            const hex = buildHex();
+            if (hex === null) { alert("中文编码组件未加载:请改用英文或稍后重试"); return; }
+            wrap.remove();
+            sendHexCmd(devId, hex);
+        };
+    }
+
+    /* ---------- 2c. 批量条码 / 二维码(每行一个内容,按行序连续打印) ---------- */
+    function printBatchLabelModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("批量条码 / 二维码",
+            '<p class="modal-note">每行一个内容,按行序连续打印;条码参数与单张标签一致</p>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="batchType" value="qr"><span>二维码</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="batchType" value="code128" checked><span>条码 CODE128</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="batchType" value="ean13"><span>条码 EAN13</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="batchType" value="code39"><span>条码 CODE39</span></label>' +
+            "</div>" +
+            "<label for=\"batchInput\">打印内容(每行一个)</label>" +
+            '<textarea id="batchInput" rows="6" placeholder="内容1&#10;内容2&#10;内容3" spellcheck="false"></textarea>' +
+            '<div class="mm-input-row">' +
+            '<div><label for="batchW">二维码尺寸(mm)</label><input type="number" id="batchW" value="40" min="20" max="100"></div>' +
+            '<div><label for="batchH">条码高度(mm)</label><input type="number" id="batchH" value="30" min="15" max="100"></div>' +
+            '<div><label for="batchNarrow">窄条宽度(点)</label><input type="number" id="batchNarrow" value="2" min="1" max="4"></div>' +
+            "</div>" +
+            '<label class="chk"><input type="checkbox" id="batchText" checked> 每张下方印内容文字</label>' +
+            "<label for=\"batchFeed\">每张走纸行数</label>" +
+            '<input type="number" id="batchFeed" value="3" min="0" max="20">' +
+            "<label>生成指令(十六进制)</label>" +
+            '<textarea id="batchCmd" readonly rows="5" class="mono" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="batchOk">确认打印</button>');
+        const taCmd = wrap.querySelector("#batchCmd");
+        function buildBatch() {
+            const type = wrap.querySelector('input[name="batchType"]:checked').value;
+            const list = wrap.querySelector("#batchInput").value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (!list.length) return { err: "请输入至少一行内容" };
+            for (let i = 0; i < list.length; i++) {
+                const e = codeDataErr(type, list[i]);
+                if (e) return { err: "第 " + (i + 1) + " 行:" + e };
+            }
+            const mag = Math.max(3, Math.min(8, Math.floor((Math.max(20, Math.min(100, Number(wrap.querySelector("#batchW").value) || 40))) / 8)));
+            const bh = Math.max(40, Math.min(240, Math.floor((Math.max(15, Math.min(100, Number(wrap.querySelector("#batchH").value) || 30))) * 8 * 0.6)));
+            const narrow = Math.max(2, Math.min(6, Number(wrap.querySelector("#batchNarrow").value) || 2));
+            const feed = Math.max(0, Math.min(20, Number(wrap.querySelector("#batchFeed").value) || 0));
+            const bytes = [0x1B, 0x40, 0x1B, 0x61, 0x01];   /* 初始化 + 居中 */
+            let ok = true;
+            list.forEach(line => {
+                if (!escposPushCode(bytes, type, line, { mag: mag, bh: bh, narrow: narrow })) ok = false;
+                bytes.push(0x0A);
+                if (wrap.querySelector("#batchText").checked) {
+                    const e = encodePrintLine(line);
+                    if (e === null) ok = false;
+                    else { e.forEach(b => bytes.push(b)); bytes.push(0x0A); }
+                }
+                for (let i = 0; i < feed; i++) bytes.push(0x0A);
+            });
+            bytes.push(0x1B, 0x61, 0x00, 0x0A, 0x0A);
+            if (!ok) return { err: "中文编码组件未加载:内容含中文时需联网" };
+            return { cmd: bytesToHexSpaced(bytes) };
+        }
+        function refresh() {
+            const r = buildBatch();
+            taCmd.value = r.err ? "(" + r.err + ")" : r.cmd;
+        }
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll("#batchInput,#batchW,#batchH,#batchNarrow,#batchFeed,#batchText,input[name=batchType]").forEach(el => {
+                el.addEventListener(evt, refresh);
+            });
+        });
+        refresh();
+        wrap.querySelector("#batchOk").onclick = function () {
+            const r = buildBatch();
+            if (r.err) { alert(r.err); return; }
+            wrap.remove();
+            sendHexCmd(devId, r.cmd);
+        };
+    }
+
+    /* ---------- 3. 条码 / 二维码标签(ESC/POS,走小票通道下发) ---------- */
+    function printLabelModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("条码 / 二维码标签",
+            '<p class="modal-note">生成 ESC/POS 指令(走小票打印通道);标签文字可多行、可调顺序;打不出可勾选编辑微调</p>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="labelType" value="qr"><span>二维码</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelType" value="code128" checked><span>条码 CODE128</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelType" value="ean13"><span>条码 EAN13</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelType" value="code39"><span>条码 CODE39</span></label>' +
+            "</div>" +
+            "<label for=\"labelData\">打印内容</label>" +
+            '<input type="text" id="labelData" placeholder="二维码 / 条码内容" autocomplete="off" spellcheck="false">' +
+            "<label for=\"labelTitle\">标签文字(可选,每行一段,按行序打印)</label>" +
+            '<textarea id="labelTitle" rows="2" placeholder="例如:货架 A-01&#10;第二行文字" autocomplete="off" spellcheck="false"></textarea>' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="labelOrder" value="textTop" checked><span>文字在上</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelOrder" value="codeTop"><span>条码在上</span></label>' +
+            "</div>" +
+            '<div class="mm-input-row">' +
+            '<div><label for="labelW">二维码尺寸(mm)</label><input type="number" id="labelW" value="40" min="20" max="100"></div>' +
+            '<div><label for="labelH">条码高度(mm)</label><input type="number" id="labelH" value="30" min="15" max="100"></div>' +
+            '<div><label for="labelNarrow">窄条宽度(点)</label><input type="number" id="labelNarrow" value="2" min="1" max="4"></div>' +
+            "</div>" +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="labelFontSize" value="1" checked><span>标签文字:正常</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelFontSize" value="2"><span>标签文字:2倍</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelFontSize" value="3"><span>标签文字:3倍</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="labelFontSize" value="4"><span>标签文字:4倍</span></label>' +
+            "</div>" +
+            '<label class="chk"><input type="checkbox" id="enableEditLabel"> 允许编辑指令(默认关闭)</label>' +
+            "<label>生成指令(十六进制)</label>" +
+            '<textarea id="labelCmd" readonly rows="7" class="mono" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="labelOk">确认打印</button>');
+        const taCmd = wrap.querySelector("#labelCmd");
+        const chkEdit = wrap.querySelector("#enableEditLabel");
+        chkEdit.addEventListener("change", function () {
+            if (this.checked) taCmd.removeAttribute("readonly");
+            else { taCmd.setAttribute("readonly", "readonly"); refresh(); }
+        });
+        function buildLabel() {
+            const type = wrap.querySelector('input[name="labelType"]:checked').value;
+            const data = wrap.querySelector("#labelData").value.trim();
+            const titleLines = wrap.querySelector("#labelTitle").value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            const fontK = Number(wrap.querySelector('input[name="labelFontSize"]:checked').value) || 1;
+            const narrow = Math.max(2, Math.min(6, Number(wrap.querySelector("#labelNarrow").value) || 2));
+            const order = wrap.querySelector('input[name="labelOrder"]:checked').value;
+            const wMm = Math.max(20, Math.min(100, Number(wrap.querySelector("#labelW").value) || 40));
+            const hMm = Math.max(15, Math.min(100, Number(wrap.querySelector("#labelH").value) || 30));
+            const verr = codeDataErr(type, data);
+            if (verr) return { err: verr };
+            /* 改走 ESC/POS 原生条码指令:CPCL 的 B 指令这批 58mm 固件不支持(仅支持 TEXT/BOX 画图) */
+            const bytes = [0x1B, 0x40, 0x1B, 0x61, 0x01];   /* 初始化 + 居中 */
+            const sizeByte = k => ((((k || 1) - 1) << 4) | ((k || 1) - 1)) & 0xFF;
+            let ok = true;
+            const pushTitle = () => {
+                titleLines.forEach(line => {
+                    const e = encodePrintLine(line);
+                    if (e === null) { ok = false; return; }
+                    const sz = sizeByte(fontK);
+                    if (sz) bytes.push(0x1D, 0x21, sz);
+                    e.forEach(b => bytes.push(b));
+                    bytes.push(0x0A);
+                    if (sz) bytes.push(0x1D, 0x21, 0x00);
+                });
+                bytes.push(0x0A);
+            };
+            const pushCode = () => {
+                /* 指令段与批量打印共用 escposPushCode(CPCL 的 B 指令这批 58mm 固件不支持) */
+                const mag = Math.max(3, Math.min(8, Math.floor(wMm / 8)));         /* 二维码模块 3-8 */
+                const bh = Math.max(40, Math.min(240, Math.floor(hMm * 8 * 0.6))); /* 条码高度(点) */
+                if (!escposPushCode(bytes, type, data, { mag: mag, bh: bh, narrow: narrow })) ok = false;
+                bytes.push(0x0A);
+            };
+            if (order === "textTop") { pushTitle(); pushCode(); }
+            else { pushCode(); pushTitle(); }
+            bytes.push(0x1B, 0x61, 0x00, 0x0A, 0x0A);
+            if (!ok) return { err: "中文编码组件未加载:内容 / 标签文字含中文时需联网" };
+            return { cmd: bytesToHexSpaced(bytes) };
+        }
+        function refresh() {
+            if (chkEdit.checked) return;   /* 编辑模式下不覆盖手改内容 */
+            const r = buildLabel();
+            taCmd.value = r.err ? "(" + r.err + ")" : r.cmd;
+        }
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll("#labelData,#labelTitle,#labelW,#labelH,#labelNarrow,input[name=labelType],input[name=labelFontSize],input[name=labelOrder]").forEach(el => {
+                el.addEventListener(evt, refresh);
+            });
+        });
+        refresh();
+        wrap.querySelector("#labelOk").onclick = function () {
+            if (chkEdit.checked) {
+                const cmdInput = taCmd.value;
+                if (!cmdInput || cmdInput[0] === "(") { alert("指令不能为空"); return; }
+                wrap.remove();
+                sendHexCmd(devId, cmdInput);
+                return;
+            }
+            const r = buildLabel();
+            if (r.err) { alert(r.err); return; }
+            wrap.remove();
+            sendHexCmd(devId, r.cmd);
+        };
+    }
+
+    /* ---------- 4. 图片打印(单色位图,GS v 0 指令) ---------- */
+    function imageToEscPosBitmap(img, widthDots, threshold, dither) {
+        const w = Math.max(16, Math.min(1024, Math.round(widthDots)));
+        const h = Math.max(1, Math.round(img.height * (w / img.width)));
+        if (h > 1500) return { error: "图片过高(超过 1500 点),请裁剪后再试" };
+        const cv = document.createElement("canvas");
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const g = new Float32Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+            g[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+        }
+        const bits = new Uint8Array(w * h);
+        if (dither) {
+            /* Floyd–Steinberg 抖动:灰度过渡更平滑 */
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const i = y * w + x;
+                    const old = g[i];
+                    const nv = old < 128 ? 0 : 255;
+                    if (nv === 0) bits[i] = 1;
+                    const err = old - nv;
+                    if (x + 1 < w) g[i + 1] += err * 7 / 16;
+                    if (y + 1 < h) {
+                        if (x > 0) g[i + w - 1] += err * 3 / 16;
+                        g[i + w] += err * 5 / 16;
+                        if (x + 1 < w) g[i + w + 1] += err * 1 / 16;
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < w * h; i++) bits[i] = g[i] < threshold ? 1 : 0;
+        }
+        const bytesPerRow = Math.ceil(w / 8);
+        const bytes = [0x1B, 0x40, 0x1D, 0x76, 0x30, 0x00,
+            bytesPerRow & 0xFF, (bytesPerRow >> 8) & 0xFF, h & 0xFF, (h >> 8) & 0xFF];
+        for (let y = 0; y < h; y++) {
+            for (let b = 0; b < bytesPerRow; b++) {
+                let byte = 0;
+                for (let k = 0; k < 8; k++) {
+                    const x = b * 8 + k;
+                    if (x < w && bits[y * w + x]) byte |= (0x80 >> k);
+                }
+                bytes.push(byte);
+            }
+        }
+        bytes.push(0x0A, 0x0A, 0x0A);
+        return { width: w, height: h, bits: bits, bytes: bytes };
+    }
+    function printImageModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("图片打印(单色位图)",
+            '<p class="modal-note">选择图片自动转单色位图并以 GS v 0 指令下发,适合 logo / 图形</p>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="imgPick">选择图片</button>' +
+            '<input type="file" id="imgFile" accept="image/*" style="display:none">' +
+            '<div class="chips">' +
+            '<label class="chip-opt"><input type="radio" name="imgWidth" value="384" checked><span>58mm(384点)</span></label>' +
+            '<label class="chip-opt"><input type="radio" name="imgWidth" value="832"><span>110mm(832点)</span></label>' +
+            "</div>" +
+            '<label>黑白阈值:<span id="imgThVal">128</span>(数值越小图案越浅)</label>' +
+            '<input type="range" id="imgTh" min="1" max="254" value="128">' +
+            '<label class="chk"><input type="checkbox" id="imgDither" checked> 抖动算法(灰度过渡更平滑)</label>' +
+            '<canvas id="imgPreview" class="img-preview" width="10" height="10" style="display:none"></canvas>' +
+            '<p class="tip" id="imgStat">尚未选择图片</p>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="imgOk" disabled>确认打印</button>');
+        const canvas = wrap.querySelector("#imgPreview");
+        const stat = wrap.querySelector("#imgStat");
+        const fileInp = wrap.querySelector("#imgFile");
+        const rangeTh = wrap.querySelector("#imgTh");
+        let imgEl = null;
+        let lastBitmap = null;
+        wrap.querySelector("#imgPick").onclick = () => fileInp.click();
+        fileInp.onchange = function () {
+            const file = this.files[0];
+            this.value = "";
+            if (!file) return;
+            const im = new Image();
+            im.onload = () => { imgEl = im; render(); URL.revokeObjectURL(im.src); };
+            im.onerror = () => alert("图片加载失败,请换一张试试");
+            im.src = URL.createObjectURL(file);
+        };
+        function currentOpts() {
+            return {
+                widthDots: Number(wrap.querySelector('input[name="imgWidth"]:checked').value) || 384,
+                threshold: Number(rangeTh.value) || 128,
+                dither: wrap.querySelector("#imgDither").checked
+            };
+        }
+        function render() {
+            if (!imgEl) return;
+            const r = imageToEscPosBitmap(imgEl, currentOpts().widthDots, currentOpts().threshold, currentOpts().dither);
+            if (r.error) { lastBitmap = null; stat.textContent = r.error; canvas.style.display = "none"; wrap.querySelector("#imgOk").disabled = true; return; }
+            lastBitmap = r;
+            wrap.querySelector("#imgOk").disabled = false;   /* 位图生成成功后解锁确认按钮 */
+            canvas.style.display = "block";
+            canvas.width = r.width;
+            canvas.height = r.height;
+            const ctx = canvas.getContext("2d");
+            const imgData = ctx.createImageData(r.width, r.height);
+            for (let i = 0; i < r.width * r.height; i++) {
+                const v = r.bits[i] ? 0 : 255;
+                imgData.data[i * 4] = v; imgData.data[i * 4 + 1] = v; imgData.data[i * 4 + 2] = v; imgData.data[i * 4 + 3] = 255;
+            }
+            ctx.putImageData(imgData, 0, 0);
+            stat.textContent = "尺寸 " + r.width + "×" + r.height + " 点 · 指令约 " + Math.ceil(r.bytes.length * 3 / 1024) + " KB";
+        }
+        ["input", "change"].forEach(evt => {
+            wrap.querySelectorAll('input[name="imgWidth"],#imgDither').forEach(el => el.addEventListener(evt, render));
+        });
+        rangeTh.addEventListener("input", function () {
+            wrap.querySelector("#imgThVal").textContent = this.value;
+            render();
+        });
+        wrap.querySelector("#imgOk").onclick = function () {
+            if (!lastBitmap) { alert("请先选择图片"); return; }
+            const hex = bytesToHexSpaced(lastBitmap.bytes);
+            wrap.remove();
+            sendHexCmd(devId, hex);
+        };
+    }
+
+    /* ---------- 5. 自定义指令 + 收藏(本机 localStorage 保存) ---------- */
+    const CMD_FAV_KEY = "YK_CMD_FAV";
+    function loadCmdFavs() {
+        try { return JSON.parse(localStorage.getItem(CMD_FAV_KEY) || "[]"); } catch (e) { return []; }
+    }
+    function saveCmdFavs(list) {
+        try { localStorage.setItem(CMD_FAV_KEY, JSON.stringify(list)); } catch (e) { /* 隐私模式等场景忽略 */ }
+    }
+    function customCmdModal(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const wrap = openModal("自定义指令 · 收藏本地",
+            '<p class="modal-note">粘贴任意指令直接下发(十六进制或 CPCL/ESC 文本);常用指令可保存到收藏(本机保存,最多 50 条)</p>' +
+            '<textarea id="customCmdInput" rows="4" class="mono" placeholder="十六进制:1B 40 0A&#10;或 CPCL 文本:! 0 200 200 240 1 …" spellcheck="false"></textarea>' +
+            "<label for=\"favName\">收藏名称(保存时填写)</label>" +
+            '<input type="text" id="favName" placeholder="例如:走纸三行" autocomplete="off">' +
+            '<p class="ops-group">我的收藏</p>' +
+            '<div id="favList"></div>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-ghost" id="favSave">保存到本地收藏</button>' +
+            '<button type="button" class="btn btn-primary" id="customOk">下发指令</button>');
+        const list = wrap.querySelector("#favList");
+        function renderFavs() {
+            list.textContent = "";
+            const favs = loadCmdFavs();
+            if (!favs.length) {
+                const p = document.createElement("p");
+                p.className = "tip";
+                p.textContent = "暂无收藏:填写指令和名称后点「保存到本地收藏」";
+                list.appendChild(p);
+                return;
+            }
+            favs.forEach(fav => {
+                const item = document.createElement("div");
+                item.className = "fav-item";
+                const name = document.createElement("span");
+                name.className = "fav-name";
+                name.textContent = fav.n;
+                const cmd = document.createElement("span");
+                cmd.className = "fav-cmd";
+                cmd.textContent = fav.c;
+                cmd.title = fav.c;
+                const btnRun = document.createElement("button");
+                btnRun.type = "button";
+                btnRun.className = "btn btn-primary btn-sm";
+                btnRun.textContent = "下发";
+                btnRun.onclick = () => { wrap.remove(); sendHexCmd(devId, fav.c); };
+                const btnDel = document.createElement("button");
+                btnDel.type = "button";
+                btnDel.className = "btn btn-ghost btn-sm";
+                btnDel.textContent = "删除";
+                btnDel.onclick = () => {
+                    saveCmdFavs(loadCmdFavs().filter(x => !(x.n === fav.n && x.c === fav.c)));
+                    renderFavs();
+                };
+                item.appendChild(name);
+                item.appendChild(cmd);
+                item.appendChild(btnRun);
+                item.appendChild(btnDel);
+                list.appendChild(item);
+            });
+        }
+        wrap.querySelector("#favSave").onclick = function () {
+            const c = wrap.querySelector("#customCmdInput").value.trim();
+            const n = wrap.querySelector("#favName").value.trim();
+            if (!c) { alert("请先填写指令内容"); return; }
+            if (!n) { alert("请填写收藏名称"); return; }
+            const favs = loadCmdFavs();
+            favs.unshift({ n: n, c: c, t: Date.now() });
+            saveCmdFavs(favs.slice(0, 50));
+            wrap.querySelector("#favName").value = "";
+            renderFavs();
+        };
+        wrap.querySelector("#customOk").onclick = function () {
+            const c = wrap.querySelector("#customCmdInput").value.trim();
+            if (!c) { alert("指令不能为空"); return; }
+            wrap.remove();
+            sendHexCmd(devId, c);
+        };
+        renderFavs();
+    }
+</script>
+<script>
+    /* ========== 固件升级(文件 / 链接) ========== */
+    function fileToHexString(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) { reject(new Error("No file provided")); return; }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const arrayBuffer = e.target.result;
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const hexString = Array.from(uint8Array).map(byte => byte.toString(16).padStart(2, "0").toUpperCase()).join("");
+                resolve(hexString);
+            };
+            reader.onerror = () => reject(new Error("读取文件时出错"));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+    var upgradeDeviceId = "";
+    var upgradeVersion = "";
+    const fileInput = document.getElementById("fileInput");
+    fileInput.onchange = async function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        fileInput.value = "";
+        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框,文件选择作废重来 */
+        try {
+            showLoading(true);
+            const hexString = await fileToHexString(file);
+            postForm(printer_url, {
+                apiKey: "ec-printer-mqtt-develop-upgrade",
+                secretId: secretId,
+                secretKey: secretKey,
+                deviceId: upgradeDeviceId,
+                cmd: hexString,
+                version: upgradeVersion
+            })
+            .then(data => renderRes(data && data.data ? data.data : data))
+            .catch(() => showResError("执行失败:请求未发出或网络异常"))
+            .finally(() => showLoading(false));
+        } catch (error) {
+            console.error(error);
+            showLoading(false);
+        }
+    };
+    function upgradeFirmware(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const modal = openModal("固件文件升级",
+            '<label for="upgradeVersionInput">固件版本号</label>' +
+            '<input type="text" id="upgradeVersionInput" placeholder="例如:V1.0.0" autocomplete="off">' +
+            '<p class="modal-note" style="margin-top:12px;">确认后将打开文件选择器,固件文件会转为十六进制后下发</p>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="upgradeConfirmBtn">确认并选择文件</button>');
+        modal.querySelector("#upgradeVersionInput").focus();
+        modal.querySelector("#upgradeConfirmBtn").onclick = function () {
+            const version = modal.querySelector("#upgradeVersionInput").value.trim();
+            if (!version) { alert("请输入固件版本号"); return; }
+            upgradeDeviceId = devId;
+            upgradeVersion = version;
+            modal.remove();
+            document.getElementById("fileInput").click();
+        };
+    }
+    function stringToHexUpper(str) {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+    function upgradeFirmwareUrl(deviceId) {
+        const devId = String(deviceId || "").trim();
+        if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const modal = openModal("固件链接升级",
+            '<label for="upgradeUrlInput">升级文件外链地址</label>' +
+            '<textarea id="upgradeUrlInput" rows="3" class="mono" placeholder="https://…" spellcheck="false"></textarea>',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="upgradeUrlOk">确认升级</button>');
+        modal.querySelector("#upgradeUrlInput").focus();
+        modal.querySelector("#upgradeUrlOk").onclick = function () {
+            const cmdInput = modal.querySelector("#upgradeUrlInput").value.trim();
+            if (!cmdInput) { alert("指令不能为空"); return; }
+            const cmdInputCmd = "1B81" + stringToHexUpper(cmdInput) + "0D0A";
+            modal.remove();
+            sendHexCmd(devId, cmdInputCmd);
+        };
+    }
+</script>
+</body>
+</html>
