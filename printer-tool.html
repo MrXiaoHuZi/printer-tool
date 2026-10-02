@@ -162,6 +162,10 @@
   .modal-body input[type=text],.modal-body input[type=number],.modal-body textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit}
   .modal-body textarea{font-size:13px;line-height:1.6;resize:vertical}
   .modal-body textarea.mono{font-family:Consolas,"Courier New",monospace}
+  /* 固件链接升级的版本下拉框 */
+  #fwVerSel{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+  body.dark #fwVerSel{background:#101726;color:var(--text);border-color:var(--line)}
+  body.mobile #fwVerSel{font-size:16px}
   .modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 16px}
   .modal-note{font-size:12.5px;color:var(--muted);background:#f6f8fc;border:1px solid #e6ebf4;padding:8px 12px;border-radius:8px;margin:0 0 10px}
   .chk{display:flex!important;align-items:center;gap:8px;font-size:13.5px!important;font-weight:500!important;margin:8px 0!important;cursor:pointer}
@@ -284,6 +288,9 @@
   body.dark .result-table tbody tr:hover{background:#18233a}
   body.dark .result-table tr.err-row{background:#2a1518!important}
   body.dark .result-table tr.err-row:hover{background:#361a1d!important}
+  /* 深色模式表格底色:不覆盖的话表格仍白底,浅色文字看不清 */
+  body.dark .result-table{background:var(--card)}
+  body.dark .dev-copy svg{color:#5f6d8c}
   body.dark .qrcode-text-btn{color:#7aa5f8}
   body.dark .pill-ok{background:#0d3524;color:#4ade80}
   body.dark .pill-err{background:#3a1416;color:#f87171}
@@ -403,7 +410,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.7 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.8 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -420,13 +427,14 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.7.7";
+	var APP_VERSION = "2.7.8";
 	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
+		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本(EC=YK-58R云/54云,XY58B/XY58C=YK-58B云),版本/说明/链接存在 GitHub 的 firmware.json,方便随时修改"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
-		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局;手机版默认隐藏打印机操作列,版本弹窗连点标题 5 次输入管理密码后显示;接口凭据改为外置输入,文件不再内置凭据"],
+		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局"],
 		["2.7.5", "打印机操作的下级弹窗支持「← 返回」上级;检测到新版时直接展示更新内容;底部版本号可点开查看更新记录"],
 		["2.7.4", "顶栏新增「下载本地版」:一键把最新在线版保存为本地文件,离线可用"],
 		["2.7.3", "更新源改为 GitHub Pages 优先:改公告 / 发版后自动同步,不再需要手动刷新 CDN 缓存"],
@@ -2607,22 +2615,92 @@ PRINT
         const bytes = encoder.encode(str);
         return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
     }
+    /* ---------- 固件链接升级:版本 / 说明 / 链接存在 GitHub 的 firmware.json,按型号分组,方便随时修改 ---------- */
+    var FW_JSON_URLS = ghFileUrls("firmware.json");
+    var FW_CACHE = null;   /* firmware.json 内容,本次打开期间缓存(改完文件刷新页面生效) */
+    /* 设备前缀 → 型号分组:ec=YK-58R云/54云;xy58=YK-58B云 */
+    function fwGroupOf(devId) {
+        const up = String(devId).replace(/\s/g, "").toUpperCase();
+        if (up.startsWith("EC")) return "ec";
+        if (up.startsWith("XY58B") || up.startsWith("XY58C")) return "xy58";
+        return "";
+    }
+    function fwLoadJson() {
+        if (FW_CACHE) return Promise.resolve(FW_CACHE);
+        return updFetchText(FW_JSON_URLS).then(function (r) {
+            FW_CACHE = JSON.parse(r.t.trim());
+            return FW_CACHE;
+        });
+    }
     function upgradeFirmwareUrl(deviceId) {
         const devId = String(deviceId || "").trim();
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
         const modal = openModal("固件链接升级",
+            '<p class="qr-dev" id="fwDevLine"></p>' +
+            '<p class="modal-note">选择版本自动填入下方链接(仍可手动修改 / 粘贴);版本清单存在 GitHub 的 firmware.json,由管理员维护</p>' +
+            '<label for="fwVerSel">选择固件版本</label>' +
+            '<select id="fwVerSel"><option value="">正在获取版本列表…</option></select>' +
+            '<div class="modal-note" id="fwNoteBox" style="display:none"></div>' +
             '<label for="upgradeUrlInput">升级文件外链地址</label>' +
             '<textarea id="upgradeUrlInput" rows="3" class="mono" placeholder="https://…" spellcheck="false"></textarea>',
             '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
             '<button type="button" class="btn btn-primary" id="upgradeUrlOk">确认升级</button>');
-        modal.querySelector("#upgradeUrlInput").focus();
+        const devLine = modal.querySelector("#fwDevLine");
+        const sel = modal.querySelector("#fwVerSel");
+        const noteBox = modal.querySelector("#fwNoteBox");
+        const urlTa = modal.querySelector("#upgradeUrlInput");
+        devLine.textContent = "设备编号:" + devId;
+        function fillSel(list) {
+            sel.innerHTML = "";
+            const op0 = document.createElement("option");
+            op0.value = "";
+            op0.textContent = list.length ? "选择固件版本(共 " + list.length + " 个)" : "暂无版本(firmware.json 里没有该型号的条目)";
+            sel.appendChild(op0);
+            list.forEach(function (it) {
+                const op = document.createElement("option");
+                op.value = it.url;
+                op.textContent = it.ver + (it.note ? " · " + String(it.note).slice(0, 24) : "");
+                op.dataset.ver = it.ver;
+                op.dataset.note = it.note || "";
+                sel.appendChild(op);
+            });
+        }
+        const grp = fwGroupOf(devId);
+        if (!grp) {
+            sel.innerHTML = "";
+            sel.disabled = true;
+            const op = document.createElement("option");
+            op.textContent = "该设备前缀未识别型号(EC / XY58B / XY58C 支持)";
+            sel.appendChild(op);
+        } else {
+            fwLoadJson().then(function (j) {
+                const g = (j && j[grp]) || null;
+                devLine.textContent = "设备编号:" + devId + " · 型号:" + (g && g.model ? g.model : "(firmware.json 未配置)");
+                const list = (g && Array.isArray(g.list)) ? g.list.filter(function (x) { return x && x.ver && x.url; }) : [];
+                fillSel(list);
+            }).catch(function () {
+                sel.innerHTML = "";
+                const op = document.createElement("option");
+                op.value = "";
+                op.textContent = "版本列表获取失败(网络异常),可直接粘贴链接";
+                sel.appendChild(op);
+            });
+        }
+        sel.onchange = function () {
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !sel.value) { noteBox.style.display = "none"; return; }
+            urlTa.value = sel.value;
+            noteBox.textContent = "【" + (opt.dataset.ver || "") + "】" + (opt.dataset.note || "已自动填入链接");
+            noteBox.style.display = "block";
+        };
         modal.querySelector("#upgradeUrlOk").onclick = function () {
-            const cmdInput = modal.querySelector("#upgradeUrlInput").value.trim();
-            if (!cmdInput) { alert("指令不能为空"); return; }
+            const cmdInput = urlTa.value.trim();
+            if (!cmdInput) { alert("请选择版本或粘贴升级链接"); return; }
             const cmdInputCmd = "1B81" + stringToHexUpper(cmdInput) + "0D0A";
             modal.remove();
             sendHexCmd(devId, cmdInputCmd);
         };
+        urlTa.focus();
     }
 </script>
 </body>

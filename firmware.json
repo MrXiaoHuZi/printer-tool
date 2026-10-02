@@ -1,0 +1,14 @@
+{
+  "ec": {
+    "model": "YK-58R云 / 54云",
+    "list": [
+      {"ver": "V1.0.0", "note": "示例条目:把 ver(版本号)/ note(说明)/ url(固件直链) 改成真实信息", "url": "https://example.com/firmware/yk58r-V1.0.0.bin"}
+    ]
+  },
+  "xy58": {
+    "model": "YK-58B云",
+    "list": [
+      {"ver": "V1.0.0", "note": "示例条目:把 ver(版本号)/ note(说明)/ url(固件直链) 改成真实信息", "url": "https://example.com/firmware/yk58b-V1.0.0.bin"}
+    ]
+  }
+}
