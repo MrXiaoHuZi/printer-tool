@@ -432,7 +432,7 @@
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
-		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本(EC=YK-58R云/54云,XY58B/XY58C=YK-58B云),版本/说明/链接存在 GitHub 的 firmware.json,方便随时修改"],
+		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
 		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局"],
 		["2.7.5", "打印机操作的下级弹窗支持「← 返回」上级;检测到新版时直接展示更新内容;底部版本号可点开查看更新记录"],
@@ -2637,7 +2637,6 @@ PRINT
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
         const modal = openModal("固件链接升级",
             '<p class="qr-dev" id="fwDevLine"></p>' +
-            '<p class="modal-note">选择版本自动填入下方链接(仍可手动修改 / 粘贴);版本清单存在 GitHub 的 firmware.json,由管理员维护</p>' +
             '<label for="fwVerSel">选择固件版本</label>' +
             '<select id="fwVerSel"><option value="">正在获取版本列表…</option></select>' +
             '<div class="modal-note" id="fwNoteBox" style="display:none"></div>' +
@@ -2690,8 +2689,12 @@ PRINT
             const opt = sel.options[sel.selectedIndex];
             if (!opt || !sel.value) { noteBox.style.display = "none"; return; }
             urlTa.value = sel.value;
-            noteBox.textContent = "【" + (opt.dataset.ver || "") + "】" + (opt.dataset.note || "已自动填入链接");
-            noteBox.style.display = "block";
+            if (opt.dataset.note) {
+                noteBox.textContent = "【" + (opt.dataset.ver || "") + "】" + opt.dataset.note;
+                noteBox.style.display = "block";
+            } else {
+                noteBox.style.display = "none";   /* 没写说明就不显示说明框 */
+            }
         };
         modal.querySelector("#upgradeUrlOk").onclick = function () {
             const cmdInput = urlTa.value.trim();
