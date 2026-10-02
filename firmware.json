@@ -6,7 +6,7 @@
   "xy58": {
     "model": "YK-58B云",
     "list": [
-      {"ver": "云固件V0014", "note": "支持WPA-PSKWiFi密码认证方式", "url": "https://video.hzecool.com/xy_cloud/014/ota_CLOUD_MODULE_V0014.bin"}
+      {"ver": "云固件V0014", "note": "支持WPA-PSKWiFi密码认证方式", "url": "https://video.hzecool.com/xy_cloud/014/ota_CLOUD_MODULE_V0014.bin"},
       {"ver": "云固件V0013", "note": "增加收到WiFi配置信息打印出结果", "url": "https://video.hzecool.com/xy_cloud/013/ota_CLOUD_MODULE_V0013.bin"},
       {"ver": "云固件V0012", "note": "取消打印机AP热点只开启10分钟", "url": "https://video.hzecool.com/xy_cloud/012/ota_CLOUD_MODULE_V0012.bin"},
       {"ver": "云固件V0010", "note": "之前老的设备升级固件先升级这个", "url": "https://video.hzecool.com/xy_cloud/010/ota_CLOUD_MODULE_V0010.bin"},
