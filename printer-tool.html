@@ -2628,8 +2628,15 @@ PRINT
     function fwLoadJson() {
         if (FW_CACHE) return Promise.resolve(FW_CACHE);
         return updFetchText(FW_JSON_URLS).then(function (r) {
-            FW_CACHE = JSON.parse(r.t.trim());
-            return FW_CACHE;
+            try {
+                FW_CACHE = JSON.parse(r.t.trim());
+                return FW_CACHE;
+            } catch (e) {
+                /* 网络正常但 JSON 语法坏了:单独标记,弹窗才能提示去改文件而不是查网络 */
+                const err = new Error("firmware.json 格式有误");
+                err.fwBadJson = true;
+                throw err;
+            }
         });
     }
     function upgradeFirmwareUrl(deviceId) {
@@ -2677,11 +2684,14 @@ PRINT
                 devLine.textContent = "设备编号:" + devId + " · 型号:" + (g && g.model ? g.model : "(firmware.json 未配置)");
                 const list = (g && Array.isArray(g.list)) ? g.list.filter(function (x) { return x && x.ver && x.url; }) : [];
                 fillSel(list);
-            }).catch(function () {
+            }).catch(function (e) {
                 sel.innerHTML = "";
                 const op = document.createElement("option");
                 op.value = "";
-                op.textContent = "版本列表获取失败(网络异常),可直接粘贴链接";
+                /* 区分两种失败:文件语法坏(去 GitHub 改文件)/ 网络不可达(直接粘贴链接) */
+                op.textContent = (e && e.fwBadJson)
+                    ? "firmware.json 格式有误:请登录 GitHub 检查该文件语法(如条目间漏逗号),改好约 1 分钟生效"
+                    : "版本列表获取失败(网络异常),可直接粘贴链接";
                 sel.appendChild(op);
             });
         }
