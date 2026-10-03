@@ -11,7 +11,7 @@
       {"ver": "云固件V0012", "note": "取消打印机AP热点只开启10分钟", "url": "https://video.hzecool.com/xy_cloud/012/ota_CLOUD_MODULE_V0012.bin"},
       {"ver": "云固件V0010", "note": "之前老的设备升级固件先升级这个", "url": "https://video.hzecool.com/xy_cloud/010/ota_CLOUD_MODULE_V0010.bin"},
       {"ver": "云固件V0009", "note": "增加新出厂打印机上电默认打印配网页并进入配网模式；打印出连接的WiFi名称与WiFi名称密码;配网失败的代码提示", "url": "https://video.hzecool.com/xy_cloud/009/ota_CLOUD_MODULE_V0009.bin"},
-      {"ver": "云固件V0008", "note": "修复:配网时ip地址段冲突问题;新增配网日志", "url": "https://video.hzecool.com/xy_cloud/008/ota_CLOUD_MODULE_V0008.bin"},
+      {"ver": "云固件V0008", "note": "修复:配网时ip地址段冲突问题;新增配网日志", "url": "https://video.hzecool.com/xy_cloud/008/ota_CLOUD_MODULE_V0008.bin"}
     ]
   }
 }
