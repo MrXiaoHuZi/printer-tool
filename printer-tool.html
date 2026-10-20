@@ -168,6 +168,10 @@
   body.mobile #fwVerSel{font-size:16px}
   .modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:0 18px 16px}
   .modal-note{font-size:12.5px;color:var(--muted);background:#f6f8fc;border:1px solid #e6ebf4;padding:8px 12px;border-radius:8px;margin:0 0 10px}
+  /* 凭据解锁 / 管理员面板的状态提示行 */
+  .cred-stat{color:var(--warn);min-height:1.2em}
+  .cred-stat.ok{color:var(--ok)}
+  .cred-stat.err{color:var(--err)}
   .chk{display:flex!important;align-items:center;gap:8px;font-size:13.5px!important;font-weight:500!important;margin:8px 0!important;cursor:pointer}
   .mm-input-row{display:flex;gap:12px;margin:4px 0 10px}
   .mm-input-row>div{flex:1}
@@ -331,9 +335,9 @@
         <p>多设备批量查询 · 远程命令下发</p>
       </div>
     </div>
-    <span class="chip-warn" id="credChip" role="button" tabindex="0" title="凭据只保存在本机浏览器;点击输入 / 修改" style="cursor:pointer">
+    <span class="chip-warn" id="credChip" role="button" tabindex="0" title="点击输入凭证密钥解锁;已授权后点击可管理" style="cursor:pointer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-3.6 8-10V5.5L12 2 4 5.5V12c0 6.4 8 10 8 10z"/></svg>
-      <span id="credChipTxt">接口凭据</span>
+      <span id="credChipTxt">接口凭据:未解锁 · 点击输入密钥</span>
     </span>
     <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深色模式" title="切换深色 / 浅色模式">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
@@ -410,28 +414,25 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.7.8 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.0 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
 <input type="file" id="fileInput" style="display:none">
 <script>
-	/* 接口凭据已外置:文件里不再保存,首次使用时输入,本机浏览器永久记忆 */
+	/* 接口凭据统一管理:管理员生成加密 cred.json(仓库根目录),使用者输入「凭证密钥」解锁后自动获得真凭据 */
 	var secretId = "";
 	var secretKey = "";
-	try {
-		secretId = localStorage.getItem("YK_SID") || "";
-		secretKey = localStorage.getItem("YK_SKEY") || "";
-	} catch (e) {}
 	var printer_url="http://14.103.104.106:8081/printer/api.do";
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.7.8";
+	var APP_VERSION = "2.8.0";
 	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
+		["2.8.0", "接口凭据改为统一管理:管理员凭管理密码生成加密 cred.json 上传仓库,使用者输入凭证密钥解锁全功能,本机记住免输;不再需要人手分发 secretId / secretKey"],
 		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
 		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局"],
@@ -508,8 +509,8 @@
         el.textContent = msg;
     }
     /* 统一封装:下发十六进制打印指令(合并原 5 处重复代码) */
-    function sendHexCmd(deviceId, cmd, apiKey) {
-        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次操作 */
+    async function sendHexCmd(deviceId, cmd, apiKey) {
+        if (!(await ensureCreds())) return;   /* 未解锁凭据:弹输入框并拦下本次操作 */
         showLoading(true);
         postForm(printer_url, {
             apiKey: apiKey || "ec-printer-mqtt-develop-print",
@@ -577,46 +578,266 @@
         this.setAttribute("aria-pressed", dark ? "true" : "false");
     };
 
-    /* ========== 接口凭据(外置):首次使用时输入,本机永久记忆;顶栏徽章可查看/修改 ========== */
-    function updCredChip() {
-        const t = document.getElementById("credChipTxt");
-        if (t) t.textContent = (secretId && secretKey) ? "接口凭据:已配置" : "接口凭据:未配置 · 点击输入";
+    /* ========== 接口凭据(统一管理版) ==========
+       管理员凭管理密码进入「管理员凭证设置」,生成加密 cred.json 上传到 GitHub 仓库根目录;
+       使用者输入一次「凭证密钥」即可解锁,本机永久记住,管理员换凭据后重新输一次密钥即继续可用。 */
+    var CRED_JSON_URLS = ghFileUrls("cred.json");
+    var CRED_ITER = 150000;
+    var LS_CRED_BLOB = "YK_CRED_BLOB";   /* cred.json 本机缓存(断网时兜底解锁用) */
+    var LS_CRED_KEY = "YK_CRED_KEY";     /* 凭证密钥本机记忆 */
+    var LS_CRED_DEAD = "YK_CRED_DEAD";   /* 本机密钥失效标记(管理员更换过配置后置 1) */
+    var CRED_MANIFEST = "printer-tool-cred";
+
+    function credCryptoOk() { return !!(window.crypto && crypto.subtle); }
+    function credMb64(b64) { var s = atob(b64), u = new Uint8Array(s.length), i; for (i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+    function credTb64(u8) { var s = "", i; for (i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); }
+    function credP2(n) { return String(n).padStart(2, "0"); }
+    function credStamp() { var d = new Date(); return d.getFullYear() + "-" + credP2(d.getMonth() + 1) + "-" + credP2(d.getDate()) + " " + credP2(d.getHours()) + ":" + credP2(d.getMinutes()); }
+    function credDerive(pass, salt, iter) {
+        return crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"])
+            .then(function (k) {
+                return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: iter, hash: "SHA-256" }, k, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+            });
     }
-    function openCredsModal() {
-        const wrap = openModal("接口凭据配置",
-            '<p class="modal-note">凭据只保存在本机浏览器,不会上传任何服务器;换电脑 / 换浏览器需重新输入,凭据向管理员索取</p>' +
-            '<label for="credSid">secretId(凭据 1)</label>' +
-            '<input type="text" id="credSid" autocomplete="off" spellcheck="false" placeholder="粘贴 secretId">' +
-            '<label for="credSkey">secretKey(凭据 2)</label>' +
-            '<input type="text" id="credSkey" autocomplete="off" spellcheck="false" placeholder="粘贴 secretKey">',
-            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
-            '<button type="button" class="btn btn-primary" id="credOk">保存</button>');
-        const sid = wrap.querySelector("#credSid");
-        sid.value = secretId;
-        wrap.querySelector("#credSkey").value = secretKey;
-        sid.focus();
-        wrap.querySelector("#credOk").onclick = function () {
-            const v1 = sid.value.trim();
-            const v2 = wrap.querySelector("#credSkey").value.trim();
-            if (!v1 || !v2) { alert("两个凭据都要填写"); return; }
-            secretId = v1;
-            secretKey = v2;
-            try {
-                localStorage.setItem("YK_SID", v1);
-                localStorage.setItem("YK_SKEY", v2);
-            } catch (e) { /* 隐私模式:仅本次打开有效 */ }
-            updCredChip();
-            wrap.remove();
-            alert("凭据已保存到本机,这台设备以后不用再输");
+    /* 管理员生成:{secretId, secretKey} → PBKDF2 派生密钥 → AES-GCM 加密 */
+    async function credEncrypt(sid, skey, pass) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await credDerive(pass, salt, CRED_ITER);
+        const payload = JSON.stringify({ sid: sid, skey: skey });
+        const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, new TextEncoder().encode(payload));
+        return {
+            app: CRED_MANIFEST, v: 1, created: credStamp(),
+            alg: "PBKDF2-SHA256(" + CRED_ITER + ") + AES-GCM",
+            salt: credTb64(salt), iv: credTb64(iv), ct: credTb64(new Uint8Array(ct))
         };
     }
-    document.getElementById("credChip").onclick = openCredsModal;
-    /* 所有联网操作前的凭据检查:没配置就弹出输入框并拦下本次操作 */
-    function ensureCreds() {
-        if (secretId && secretKey) return true;
-        openCredsModal();
-        return false;
+    /* 使用者解锁:密钥不对时 AES-GCM 校验直接失败抛错;成功返回 {sid, skey} */
+    async function credDecrypt(j, pass) {
+        const key = await credDerive(pass, credMb64(j.salt), Number(j.iter) || CRED_ITER);
+        const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: credMb64(j.iv) }, key, credMb64(j.ct));
+        const obj = JSON.parse(new TextDecoder().decode(new Uint8Array(plain)));
+        if (!obj || !obj.sid || !obj.skey) throw new Error("配置内容无效");
+        return obj;
     }
+    /* 拉取线上 cred.json(多镜像任一可用;成功即更新本机缓存),全部失败时回落缓存兜底 */
+    function fetchCredBlob() {
+        return updFetchText(CRED_JSON_URLS).then(function (r) {
+            const j = JSON.parse(r.t.trim());
+            if (!j || !j.ct) throw new Error("cred.json 内容无效");
+            try { localStorage.setItem(LS_CRED_BLOB, JSON.stringify(j)); } catch (e) { /* 隐私模式忽略 */ }
+            return j;
+        }).catch(function () {
+            let c = null;
+            try { c = JSON.parse(localStorage.getItem(LS_CRED_BLOB) || "null"); } catch (e) { c = null; }
+            if (c && c.ct) return c;
+            return Promise.reject(new Error("cred.json 所有源不可达,且本机无缓存"));
+        });
+    }
+    function savedCredKey() { try { return localStorage.getItem(LS_CRED_KEY) || ""; } catch (e) { return ""; } }
+    function saveCredKey(pass) { try { localStorage.setItem(LS_CRED_KEY, pass); } catch (e) { /* 隐私模式:仅本次会话有效 */ } }
+    function clearCredKey() { try { localStorage.removeItem(LS_CRED_KEY); } catch (e) { /* 忽略 */ } }
+    function credDead() { try { return localStorage.getItem(LS_CRED_DEAD) === "1"; } catch (e) { return false; } }
+    function setCredDead(on) { try { if (on) localStorage.setItem(LS_CRED_DEAD, "1"); else localStorage.removeItem(LS_CRED_DEAD); } catch (e) { /* 忽略 */ } }
+    /* 密钥校验通过:真凭据写入内存,密钥记入本机;quiet=页面加载时静默尝试,不弹全屏遮罩 */
+    async function tryUnlock(pass, quiet) {
+        try { if (!quiet) showLoading(true); } catch (e) { /* 忽略 */ }
+        try {
+            if (!credCryptoOk()) throw new Error("当前浏览器不支持加密组件(crypto.subtle),请改用 Chrome / Edge / Safari 等现代浏览器");
+            const blob = await fetchCredBlob();
+            const obj = await credDecrypt(blob, pass);
+            secretId = obj.sid;
+            secretKey = obj.skey;
+            saveCredKey(pass);
+            clearCredDead();
+            updCredChip();
+        } finally {
+            try { if (!quiet) showLoading(false); } catch (e) { /* 忽略 */ }
+        }
+    }
+    function updCredChip() {
+        const t = document.getElementById("credChipTxt");
+        const chip = document.getElementById("credChip");
+        if (!t || !chip) return;
+        if (secretId && secretKey) {
+            t.textContent = "接口凭据:已授权";
+            chip.title = "本机已记住凭证密钥;点击可管理 / 清除本机记忆";
+        } else if (savedCredKey()) {
+            t.textContent = "接口凭据:密钥已失效 · 点击重新输入";
+            chip.title = "管理员已更新凭据配置,重新输入凭证密钥即可继续使用";
+        } else if (credDead()) {
+            t.textContent = "接口凭据:密钥已失效 · 点击重新输入";
+            chip.title = "管理员已更换凭据配置,输入新的凭证密钥即可恢复使用";
+        } else {
+            t.textContent = "接口凭据:未解锁 · 点击输入密钥";
+            chip.title = "向管理员索取「凭证密钥」,解锁一次本机永久记住";
+        }
+    }
+    /* 所有联网操作前的凭据检查:已解锁直接放行;未解锁先静默尝试本机密钥,仍不行弹解锁框,解锁成功本次操作继续 */
+    async function ensureCreds() {
+        if (secretId && secretKey) return true;
+        if (savedCredKey()) {
+            try { await tryUnlock(savedCredKey()); } catch (e) { clearCredKey(); setCredDead(true); updCredChip(); }
+        }
+        if (secretId && secretKey) return true;
+        await openUnlockModal();
+        return secretId && secretKey ? true : false;
+    }
+    /* 更换密钥解锁框:关闭时按当前解锁状态结算 Promise(解锁成功 / 取消) */
+    function openUnlockModal(presetMsg) {
+        return new Promise(function (resolve) {
+            const wrap = openModal("解锁接口凭据",
+                '<p class="modal-note">接口凭据由管理员统一设置并发给大家使用:输入「凭证密钥」即可解锁全部查询 / 操作,本机记住以后免输;密钥请向管理员索取</p>' +
+                '<p class="tip cred-stat" id="ckStat">' + (presetMsg || "&nbsp;") + "</p>" +
+                '<label for="ckInput">凭证密钥</label>' +
+                '<input type="password" id="ckInput" autocomplete="off" placeholder="输入凭证密钥">' +
+                '<div style="text-align:right;margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" id="ckAdmin">管理员设置…</button></div>',
+                '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+                '<button type="button" class="btn btn-primary" id="ckOk">解锁</button>');
+            const rawRemove = wrap.remove.bind(wrap);
+            wrap.remove = function () { resolve(secretId && secretKey ? true : false); rawRemove(); };
+            const input = wrap.querySelector("#ckInput");
+            const stat = wrap.querySelector("#ckStat");
+            const setStat = function (m, cls) { stat.textContent = m || " "; stat.className = "tip cred-stat" + (cls ? " " + cls : ""); };
+            input.focus();
+            async function submit() {
+                const pass = input.value;
+                if (!pass.trim()) { setStat("请输入凭证密钥", "err"); input.focus(); return; }
+                setStat("正在校验密钥并拉取凭据配置…");
+                try {
+                    await tryUnlock(pass);
+                    wrap.remove();
+                    alert("已解锁接口凭据,这台设备以后不用再输密钥");
+                } catch (e) {
+                    setStat("密钥不正确,或凭据配置 cred.json 不可达(" + ((e && e.message) || e) + ")", "err");
+                    input.select();
+                }
+            }
+            wrap.querySelector("#ckOk").onclick = submit;
+            input.onkeydown = e => { if (e.key === "Enter") submit(); };
+            wrap.querySelector("#ckAdmin").onclick = () => openAdminPassModal();
+        });
+    }
+    /* 管理密码验证(与解锁「打印机操作」列同一密码),通过后打开管理员凭证设置 */
+    function openAdminPassModal() {
+        const a = openModal("管理员验证",
+            '<p class="modal-note">输入管理密码进入「管理员凭证设置」,统一设置全体人员使用的接口凭据</p>' +
+            '<input type="password" id="apPass" autocomplete="off" placeholder="管理密码">',
+            '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
+            '<button type="button" class="btn btn-primary" id="apOk">进入</button>');
+        const p = a.querySelector("#apPass");
+        p.focus();
+        const go = function () {
+            if (p.value === OPS_PASS) openCredAdminModal();
+            else { alert("密码错误"); p.value = ""; p.focus(); }
+        };
+        a.querySelector("#apOk").onclick = go;
+        p.onkeydown = e => { if (e.key === "Enter") go(); };
+    }
+    /* 管理员工具:生成加密 cred.json 内容(复制上传到仓库根目录)+ 检测线上配置状态 */
+    function openCredAdminModal() {
+        const wrap = openModal("管理员 · 凭证统一设置",
+            '<p class="modal-note">在这里设置全员的接口凭据:生成加密配置后,把下方文本框内容上传到 GitHub 仓库根目录的 <b>cred.json</b>(和 printer-tool.html 同一位置),约 1 分钟生效;使用者输入你设定的凭证密钥即可解锁</p>' +
+            '<label for="aSid">secretId(凭据 1)</label>' +
+            '<input type="text" id="aSid" autocomplete="off" spellcheck="false" placeholder="粘贴 secretId">' +
+            '<label for="aSkey">secretKey(凭据 2)</label>' +
+            '<input type="text" id="aSkey" autocomplete="off" spellcheck="false" placeholder="粘贴 secretKey">' +
+            '<div class="mm-input-row">' +
+            '<div><label for="aKey">凭证密钥(发给使用者)</label>' +
+            '<input type="text" id="aKey" autocomplete="off" spellcheck="false" placeholder="设定一个密钥"></div>' +
+            '<div><label for="aKey2">再输一遍确认</label>' +
+            '<input type="text" id="aKey2" autocomplete="off" spellcheck="false" placeholder="重复输入"></div></div>' +
+            '<div class="fav-save-row">' +
+            '<button type="button" class="btn btn-primary btn-sm" id="aGen">生成加密配置</button>' +
+            '<button type="button" class="btn btn-ghost btn-sm" id="aCheck">检测线上凭证</button></div>' +
+            '<p class="tip" id="aStat">&nbsp;</p>' +
+            '<textarea id="aOut" rows="7" class="mono" readonly spellcheck="false" placeholder="生成的 cred.json 内容会显示在这里,复制后上传到 GitHub 仓库覆盖旧文件"></textarea>' +
+            '<div class="fav-save-row"><button type="button" class="btn btn-ghost btn-sm" id="aCopy" disabled>复制配置内容</button></div>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        const inSid = wrap.querySelector("#aSid"), inSkey = wrap.querySelector("#aSkey");
+        const inKey = wrap.querySelector("#aKey"), inKey2 = wrap.querySelector("#aKey2");
+        const stat = wrap.querySelector("#aStat"), out = wrap.querySelector("#aOut"), btnCopy = wrap.querySelector("#aCopy");
+        /* 预填:优先用本机已解锁的真凭据,其次旧版本地记忆(升级过渡) */
+        try {
+            if (!inSid.value) inSid.value = secretId || localStorage.getItem("YK_SID") || "";
+            if (!inSkey.value) inSkey.value = secretKey || localStorage.getItem("YK_SKEY") || "";
+        } catch (e) { /* 忽略 */ }
+        inSid.focus();
+        const setStat = function (m) { stat.textContent = m || " "; };
+        wrap.querySelector("#aCheck").onclick = function () {
+            setStat("正在检测线上 cred.json…");
+            fetchCredBlob().then(function (j) {
+                setStat("线上 cred.json 已存在 · 生成于 " + (j.created || "未知时间") + " · " + (j.alg || "算法未知"));
+            }).catch(function () {
+                setStat("线上 cred.json 不存在或所有源不可达(尚未上传,或本机当前断网)");
+            });
+        };
+        wrap.querySelector("#aGen").onclick = async function () {
+            const sid = inSid.value.trim(), skey = inSkey.value.trim();
+            const k1 = inKey.value, k2 = inKey2.value;
+            if (!sid || !skey) { alert("secretId / secretKey 都要填写"); return; }
+            if (!k1) { alert("请设定凭证密钥(发给使用者)"); inKey.focus(); return; }
+            if (k1 !== k2) { alert("两次输入的密钥不一致,请重新确认"); inKey2.value = ""; inKey2.focus(); return; }
+            if (!credCryptoOk()) { alert("当前浏览器不支持加密组件,请用 Chrome / Edge / Safari 等现代浏览器操作"); return; }
+            setStat("正在加密…");
+            try {
+                const j = await credEncrypt(sid, skey, k1);
+                out.value = JSON.stringify(j, null, 2);
+                btnCopy.disabled = false;
+                /* 生成即解锁本机并记住该密钥,管理员自己不用再输一遍 */
+                secretId = sid;
+                secretKey = skey;
+                saveCredKey(k1);
+                clearCredDead();
+                updCredChip();
+                setStat("生成成功(生成时间 " + j.created + ")· 本机已同步解锁并记住该密钥;上传覆盖 cred.json 后其他人重新输密钥即可");
+            } catch (e) {
+                setStat("生成失败:" + ((e && e.message) || e));
+            }
+        };
+        wrap.querySelector("#aCopy").onclick = function () {
+            if (!out.value) return;
+            const ok = () => alert("已复制:粘贴到 GitHub 仓库根目录的 cred.json 文件即可(与 printer-tool.html 同一位置)");
+            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(out.value).then(ok, () => legacyCopy(out.value, ok));
+            else legacyCopy(out.value, ok);
+        };
+    }
+    /* 顶栏凭据徽章:未解锁 → 解锁框;已授权 → 管理面板(清除本机记忆 / 管理员设置) */
+    document.getElementById("credChip").onclick = function () {
+        if (secretId && secretKey) {
+            const wrap = openModal("接口凭据 · 已授权",
+                '<p class="modal-note">本机已解锁接口凭据,批量查询、打印机操作均可正常使用;真实 secretId / secretKey 已隐藏,无需手动输入</p>' +
+                '<p class="tip" style="margin:6px 0">· 凭据或密钥要更换:点「管理员设置」生成新的加密配置,上传 GitHub 仓库覆盖 cred.json 后,其他人会提示重新输密钥</p>' +
+                '<p class="tip" style="margin:6px 0">· 换机 / 转交设备:点「清除本机密钥」,之后需重新输入凭证密钥</p>',
+                '<button type="button" class="btn btn-ghost" data-close>关闭</button>' +
+                '<button type="button" class="btn btn-ghost" id="cmAdmin">管理员设置…</button>' +
+                '<button type="button" class="btn btn-ghost" id="cmClear">清除本机密钥</button>');
+            wrap.querySelector("#cmAdmin").onclick = () => openAdminPassModal();
+            wrap.querySelector("#cmClear").onclick = function () {
+                if (!confirm("确定清除本机记住的凭证密钥?清除后需要重新输入")) return;
+                clearCredKey();
+                setCredDead(false);
+                secretId = "";
+                secretKey = "";
+                updCredChip();
+                wrap.remove();
+                alert("已清除,下次联网操作时会要求输入凭证密钥");
+            };
+        } else {
+            openUnlockModal();
+        }
+    };
+    /* 打开页面静默解锁:本机已记住密钥时自动验证;管理员换过配置时徽章提示重新输入 */
+    (function credAutoUnlock() {
+        const pass = savedCredKey();
+        if (!pass || (secretId && secretKey)) return;
+        tryUnlock(pass, true).catch(function () {
+            /* 密钥失效(管理员更换过配置)或缓存过期:清除本机密钥并标记失效,等使用者重新输入 */
+            clearCredKey();
+            setCredDead(true);
+            updCredChip();
+        });
+    })();
     updCredChip();
 
     /* ========== 在线更新:从内置 GitHub 源或自建源地址检测新版并下载 ========== */
@@ -1040,7 +1261,7 @@
         const devList = document.getElementById("multiDeviceInput").value
             .split(/\r?\n/).map(i => i.trim()).filter(i => i.length > 0);
         if (devList.length === 0) { alert("请填写至少一个设备ID"); return; }
-        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次查询 */
+        if (!(await ensureCreds())) return;   /* 未解锁凭据:弹输入框并拦下本次查询 */
         showLoading(true);
         try {
             /* 并发查询,保持输入顺序(原串行逐台 await,设备多时极慢) */
@@ -1392,11 +1613,11 @@
 </script>
 <script>
     /* ========== 打印机命令下发(由查询表格「打印机操作」弹窗调用) ========== */
-    function executeCommand(cmd, params, deviceId) {
+    async function executeCommand(cmd, params, deviceId) {
         params = params || {};
         const devId = String(deviceId || "").trim();
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
-        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框并拦下本次操作 */
+        if (!(await ensureCreds())) return;   /* 未解锁凭据:弹输入框并拦下本次操作 */
         params.globalId = String(Date.now());
         showLoading(true);
         postForm(printer_url, {
@@ -2571,7 +2792,7 @@ PRINT
         const file = event.target.files[0];
         if (!file) return;
         fileInput.value = "";
-        if (!ensureCreds()) return;   /* 未配置凭据:弹输入框,文件选择作废重来 */
+        if (!(await ensureCreds())) return;   /* 未解锁凭据:弹输入框,文件选择作废重来 */
         try {
             showLoading(true);
             const hexString = await fileToHexString(file);
