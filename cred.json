@@ -1,9 +1,9 @@
 {
   "app": "printer-tool-cred",
   "v": 1,
-  "created": "2026-10-20 19:03",
+  "created": "2026-10-20 20:16",
   "alg": "PBKDF2-SHA256(150000) + AES-GCM",
-  "salt": "uaHk/GVcxuwqaHuA+Em1ww==",
-  "iv": "1BBwkSVz0S0i77av",
-  "ct": "+CwOx5ohH1LD0/u6oYbuqu6gMRdYJagd7tYSC6JmDIxmZEa8YLNu83oP/Scc385LyHDN1yRH7KZ6se2mcK0V1lI5HEJTW+0rpOkzqcW+sdLofuoM"
+  "salt": "+cZDO3pITC+TxGnsVMpkJw==",
+  "iv": "qKQqN9m3GZYJwY1e",
+  "ct": "hV+5d9hxKAO6Y8kDfv0wpAakZrspw0f91WqPQh9XHjoSpShUSRC0su6nlP0oemdeRt26A1bYO6w8Ey4T3RuAv2GD66c4W/Cd9ORVd9I1YnpWh+9D"
 }
