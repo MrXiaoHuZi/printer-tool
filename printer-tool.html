@@ -639,6 +639,7 @@
     function clearCredKey() { try { localStorage.removeItem(LS_CRED_KEY); } catch (e) { /* 忽略 */ } }
     function credDead() { try { return localStorage.getItem(LS_CRED_DEAD) === "1"; } catch (e) { return false; } }
     function setCredDead(on) { try { if (on) localStorage.setItem(LS_CRED_DEAD, "1"); else localStorage.removeItem(LS_CRED_DEAD); } catch (e) { /* 忽略 */ } }
+    function clearCredDead() { setCredDead(false); }
     /* 密钥校验通过:真凭据写入内存,密钥记入本机;quiet=页面加载时静默尝试,不弹全屏遮罩 */
     async function tryUnlock(pass, quiet) {
         try { if (!quiet) showLoading(true); } catch (e) { /* 忽略 */ }
