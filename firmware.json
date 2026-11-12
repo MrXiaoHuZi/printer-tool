@@ -6,6 +6,8 @@
   "xy58": {
     "model": "YK-58B云",
     "list": [
+      {"ver": "云+打印机固件1.040.5280.0015", "note": "(升级时间15分钟起)打印机初始化时不修改传感器校准参数;增加初始化,标定指令+支持WPA-PSKWiFi密码认证方式", "url": "https://video.hzecool.com/yk_58B/015/ota_YK_58B_5280_CLOUD_V0015.bin"},
+      {"ver": "打印机固件1.040.5280", "note": "打印机初始化时不修改传感器校准参数;增加初始化,标定指令", "url": "https://video.hzecool.com/yk_58B/015/ota_YK_58B_5280.bin"},
       {"ver": "云固件V0014", "note": "支持WPA-PSKWiFi密码认证方式", "url": "https://video.hzecool.com/xy_cloud/014/ota_CLOUD_MODULE_V0014.bin"},
       {"ver": "云固件V0013", "note": "增加收到WiFi配置信息打印出结果", "url": "https://video.hzecool.com/xy_cloud/013/ota_CLOUD_MODULE_V0013.bin"},
       {"ver": "云固件V0012", "note": "取消打印机AP热点只开启10分钟", "url": "https://video.hzecool.com/xy_cloud/012/ota_CLOUD_MODULE_V0012.bin"},
