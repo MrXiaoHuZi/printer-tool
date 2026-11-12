@@ -432,7 +432,7 @@
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
-		["2.8.1", "打印机操作新增芯烨打印机的「打印机标定」「打印机初始化」;批量条码/二维码升级模板式打印:新增默认模板样式,新增打印数量与行间距设置"],
+		["2.8.1", "打印机操作新增芯烨打印机的「打印机标定」「打印机初始化」;批量条码/二维码升级模板式打印:新增默认模板样式,内容左对齐,新增打印数量、行间距与纸张大小(默认 40×30mm)设置,指令改为 CPCL 标签格式;修复连续打印越打越偏移:每张独立定位、按标签间隙自动对齐;打印测试条码改为两行文字并内缩 2mm 方框;修复子弹窗返回后标定/初始化按钮误置灰"],
 		["2.8.0", "接口凭据改为统一管理:管理员凭管理密码生成加密,使用者输入凭证密钥解锁全功能,本机记住免输;不再需要人手分发Key"],
 		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
@@ -1452,17 +1452,17 @@
         td.appendChild(btn);
         return td;
     }
-    /* 给当前弹窗加「← 返回」按钮:回到打印机操作菜单(已存在则不重复加;固件版本随弹窗携带) */
+    /* 给当前弹窗加「← 返回」按钮:回到打印机操作菜单(已存在则不重复加;固件版本按设备记住,子弹窗没有携带也不丢) */
+    var OPS_FWVER = {};   /* devId → 固件版本,供「← 返回」还原菜单时恢复标定 / 初始化的可用状态 */
     function opsBackBtn(devId) {
         const wrap = document.querySelector(".modal-wrap");
         const head = wrap && wrap.querySelector(".modal-head");
         if (!head || head.querySelector(".modal-back")) return;
-        const fwv = wrap.dataset && wrap.dataset.fwver ? wrap.dataset.fwver : "";
         const b = document.createElement("button");
         b.type = "button";
         b.className = "modal-back";
         b.textContent = "← 返回";
-        b.onclick = () => { wrap.remove(); openOpsModal(devId, fwv); };
+        b.onclick = () => { wrap.remove(); openOpsModal(devId, OPS_FWVER[devId] || ""); };
         head.insertBefore(b, head.firstChild);
     }
     /* 标定 / 初始化固件门槛:版本号形如 大版本.版本号.固件版本.云固件版本(例 1.040.5280.0015),第 3 段 ≥5280 才支持 */
@@ -1488,7 +1488,7 @@
             '<p class="ops-group">自定义内容打印</p>' +
             '<div class="op-grid modal-ops" id="contentGrid"></div>',
             '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
-        if (wrap.dataset) wrap.dataset.fwver = String(version || "");   /* 固件版本随弹窗携带,「← 返回」还原菜单时用 */
+        if (version) OPS_FWVER[String(devId)] = String(version);   /* 固件版本按设备记住,子弹窗「← 返回」时用它还原 */
         wrap.querySelector(".qr-dev").textContent = "设备编号:" + devId;
         const addOp = (sel, op) => {
             const b = document.createElement("button");
@@ -1692,7 +1692,7 @@
         const devId = String(deviceId || "").trim();
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
         const wrap = openModal("打印测试条码(标签)",
-            '<p class="modal-note">CPCL 指令:加粗方框 + 测试文字,按标签尺寸自动生成</p>' +
+            '<p class="modal-note">CPCL 指令:方框比纸宽高各小 2mm(四周留 1mm)+ 两行测试文字(第一行「打印测试」,第二行显示设备ID),按标签尺寸自动生成</p>' +
             '<div class="mm-input-row">' +
             '<div><label for="tagWidthMm">标签宽度(mm)</label><input type="number" id="tagWidthMm" value="40" min="10" max="120"></div>' +
             '<div><label for="tagHeightMm">标签高度(mm)</label><input type="number" id="tagHeightMm" value="30" min="10" max="120"></div>' +
@@ -1706,14 +1706,17 @@
             const dotPerMm = 8;
             const wDot = wMm * dotPerMm;
             const hDot = hMm * dotPerMm;
-            const textX = Math.round(wDot * 0.22);
-            const textY = Math.round(hDot * 0.38);
+            const textX = Math.round(wDot * 0.14);
+            const y1 = Math.round(hDot * 0.26);
+            const y2 = Math.round(hDot * 0.58);
             return `! 0 200 200 ${hDot} 1
 PAGE-WIDTH ${wDot}
 SETMAG 2 2
-TEXT 55 0 ${textX} ${textY} 测试
+TEXT 55 0 ${textX} ${y1} 打印测试
 SETMAG 0 0
-BOX 0 0 ${wDot} ${hDot} 5
+TEXT 24 0 ${textX} ${y2} 设备ID:${devId}
+SETMAG 0 0
+BOX 8 8 ${wDot - 8} ${hDot - 8} 5
 FORM
 PRINT
 `;
@@ -2409,13 +2412,14 @@ PRINT
         };
     }
 
-    /* ---------- 2c. 批量条码 / 二维码(模板式:多行文字 + 条码行,支持打印数量 / 行间距) ---------- */
+    /* ---------- 2c. 批量条码 / 二维码(CPCL 标签指令:内容左起、左右两列、数量写页头、按纸张大小分页) ---------- */
     function printBatchLabelModal(deviceId) {
         const devId = String(deviceId || "").trim();
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
         const DEF_TPL = "打印测试\n名称:衣服\n颜色:黑色  尺码:XXL\n零售价:128元\n条码:0001234";
+        const CHAR_H = 24;   /* TEXT 24 字号字符高(点) */
         const wrap = openModal("批量条码 / 二维码",
-            '<p class="modal-note">模板式标签:每行一段文字;行首写「条码:内容」表示该行打条码(一张一枚),条码格式 / 高度在下方设置</p>' +
+            '<p class="modal-note">生成 CPCL 标签指令(内容左起):每行一段文字,行内用两个以上空格分隔可排左右两列;行首「条码:内容」打条码;多张逐张独立下发,每张按标签间隙自动重新定位,不会越打越偏</p>' +
             '<div class="chips">' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="qr"><span>二维码</span></label>' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="code128" checked><span>条码 CODE128</span></label>' +
@@ -2427,15 +2431,15 @@ PRINT
             '<div class="mm-input-row">' +
             '<div><label for="batchW">二维码尺寸(mm)</label><input type="number" id="batchW" value="40" min="20" max="100"></div>' +
             '<div><label for="batchH">条码高度(mm)</label><input type="number" id="batchH" value="6" min="4" max="100"></div>' +
-            '<div><label for="batchNarrow">窄条宽度(点)</label><input type="number" id="batchNarrow" value="2" min="1" max="4"></div>' +
+            '<div><label for="batchGap">行间距(mm)</label><input type="number" id="batchGap" value="1" min="1" max="10" step="0.5"></div>' +
             "</div>" +
             '<div class="mm-input-row">' +
-            '<div><label for="batchGap">行间距(mm)</label><input type="number" id="batchGap" value="1" min="1" max="10" step="0.5"></div>' +
-            '<div><label for="batchQty">打印数量(张)</label><input type="number" id="batchQty" value="1" min="1" max="500"></div>' +
-            '<div><label for="batchFeed">每张走纸行数</label><input type="number" id="batchFeed" value="3" min="0" max="20"></div>' +
+            '<div><label for="batchPW">纸张宽度(mm)</label><input type="number" id="batchPW" value="40" min="20" max="110"></div>' +
+            '<div><label for="batchPH">纸张高度(mm)</label><input type="number" id="batchPH" value="30" min="10" max="300"></div>' +
+            '<div><label for="batchQty">打印数量(张)</label><input type="number" id="batchQty" value="1" min="1" max="100"></div>' +
             "</div>" +
             "<label>生成指令(十六进制)</label>" +
-            '<textarea id="batchCmd" readonly rows="5" class="mono" spellcheck="false"></textarea>',
+            '<textarea id="batchCmd" readonly rows="8" class="mono" spellcheck="false"></textarea>',
             '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
             '<button type="button" class="btn btn-primary" id="batchOk">确认打印</button>');
         wrap.querySelector("#batchInput").value = DEF_TPL;
@@ -2444,7 +2448,7 @@ PRINT
             const type = wrap.querySelector('input[name="batchType"]:checked').value;
             const rows = wrap.querySelector("#batchInput").value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
             if (!rows.length) return { err: "请输入至少一行内容" };
-            /* 行首「条码:」/「二维码:」→ 该行为码行,冒号后为码内容;其余为文字行 */
+            /* 行首「条码:」/「二维码:」→ 该行为码行,冒号后为码内容;其余为文字行(两个以上空格分隔左右两列) */
             const parsed = rows.map(r => {
                 const m = r.match(/^(?:条码|二维码)\s*[:：]\s*(.*)$/);
                 return m ? { kind: "code", data: m[1].trim() } : { kind: "text", data: r };
@@ -2454,30 +2458,67 @@ PRINT
                 const e = codeDataErr(type, parsed[i].data);
                 if (e) return { err: "第 " + (i + 1) + " 行:" + e };
             }
-            const mag = Math.max(3, Math.min(8, Math.floor((Math.max(20, Math.min(100, Number(wrap.querySelector("#batchW").value) || 40))) / 8)));
+            const gapDots = Math.max(8, Math.min(80, Math.round((Number(wrap.querySelector("#batchGap").value) || 1) * 8)));   /* 行间距 1mm=8点;行步进 = 字符24 + 行间距 */
             const hMm = Math.max(4, Math.min(100, Number(wrap.querySelector("#batchH").value) || 6));
-            const bh = Math.max(24, Math.min(240, Math.floor(hMm * 8 * 0.6)));   /* 条码高度(点),6mm → 约 29 点 */
-            const narrow = Math.max(2, Math.min(6, Number(wrap.querySelector("#batchNarrow").value) || 2));
-            const gapDots = Math.max(8, Math.min(80, Math.round((Number(wrap.querySelector("#batchGap").value) || 1) * 8)));   /* 行间距 1mm=8点 */
-            const qty = Math.max(1, Math.min(500, Number(wrap.querySelector("#batchQty").value) || 1));
-            const feed = Math.max(0, Math.min(20, Number(wrap.querySelector("#batchFeed").value) || 0));
-            const bytes = [0x1B, 0x40, 0x1B, 0x61, 0x01, 0x1B, 0x33, gapDots];   /* 初始化 + 居中 + 行间距 */
-            let ok = true;
-            for (let c = 0; c < qty; c++) {
-                parsed.forEach(p => {
-                    if (p.kind === "code") {
-                        if (!escposPushCode(bytes, type, p.data, { mag: mag, bh: bh, narrow: narrow })) ok = false;
-                        bytes.push(0x0A);
-                    } else {
-                        const e = encodePrintLine(p.data);
-                        if (e === null) ok = false;
-                        else { e.forEach(b => bytes.push(b)); bytes.push(0x0A); }
-                    }
-                });
-                for (let i = 0; i < feed; i++) bytes.push(0x0A);
+            const bh = Math.max(32, Math.min(240, Math.floor(hMm * 8)));   /* CPCL 条码高:6mm=48点 */
+            const qty = Math.max(1, Math.min(100, Number(wrap.querySelector("#batchQty").value) || 1));
+            const pWMm = Math.max(20, Math.min(110, Number(wrap.querySelector("#batchPW").value) || 40));
+            const pHMm = Math.max(10, Math.min(300, Number(wrap.querySelector("#batchPH").value) || 30));
+            const pageW = pWMm * 8, pageH = pHMm * 8;
+            /* 布局检查:文字行宽(全角 24 / 半角 12)与总高 */
+            const gbkw = s => Array.from(s).reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 24 : 12), 0);
+            for (let i = 0; i < parsed.length; i++) {
+                if (parsed[i].kind !== "text") continue;
+                const cols = parsed[i].data.split(/\s{2,}/);
+                if (10 + gbkw(cols[0]) > pageW) return { err: "第 " + (i + 1) + " 行左列超出纸张宽度(" + pWMm + "mm),请缩短内容或加宽纸张" };
+                if (cols.length > 1 && cols[1] && 170 + gbkw(cols[1]) > pageW) return { err: "第 " + (i + 1) + " 行右列超出纸张宽度(" + pWMm + "mm),请缩短内容或加宽纸张" };
             }
-            bytes.push(0x1B, 0x61, 0x00, 0x0A, 0x0A);
+            const bytes = [];
+            const push = s => { for (let i = 0; i < s.length; i++) bytes.push(s.charCodeAt(i) & 0xFF); };
+            const body = [];
+            const bpush = s => { for (let i = 0; i < s.length; i++) body.push(s.charCodeAt(i) & 0xFF); };
+            let y = 8, lastBottom = 8, ok = true;
+            parsed.forEach(p => {
+                if (p.kind === "text") {
+                    const cols = p.data.split(/\s{2,}/);
+                    bpush("SETMAG 1 1\r\n");
+                    bpush("TEXT 24 0 10 " + y + " ");
+                    const e = encodePrintLine(cols[0]);
+                    if (e === null) ok = false; else e.forEach(b => body.push(b));
+                    bpush("\r\nSETMAG 0 0\r\n");
+                    if (cols.length > 1 && cols[1]) {
+                        bpush("SETMAG 1 1\r\n");
+                        bpush("TEXT 24 0 170 " + y + " ");
+                        const e2 = encodePrintLine(cols[1]);
+                        if (e2 === null) ok = false; else e2.forEach(b => body.push(b));
+                        bpush("\r\nSETMAG 0 0\r\n");
+                    }
+                    lastBottom = y + CHAR_H;
+                    y += CHAR_H + gapDots;
+                } else {
+                    if (type === "qr") {
+                        const mag = Math.max(3, Math.min(8, Math.floor((Math.max(20, Math.min(100, Number(wrap.querySelector("#batchW").value) || 40))) / 8)));
+                        bpush("B QR 16 " + y + " M " + mag + " U 4\r\nMA," + p.data + "\r\nE QR\r\n");
+                    } else {
+                        const bt = type === "code128" ? "128" : (type === "ean13" ? "EAN13" : "39");
+                        bpush("BARCODE-TEXT 24 0 8\r\n");
+                        bpush("BARCODE " + bt + " 1 0 " + bh + " 16 " + y + " " + p.data + "\r\n");
+                        bpush("BARCODE-TEXT OFF\r\n");
+                    }
+                    lastBottom = y + bh;
+                    y += bh + gapDots;
+                }
+            });
+            if (lastBottom > pageH) return { err: "内容超出纸张高度(" + pHMm + "mm),请缩短内容、减小行间距或加高纸张" };
             if (!ok) return { err: "中文编码组件未加载:内容含中文时需联网" };
+            /* 防越打越偏移:+BTCO 握手头仅一次;每张标签独立 format 块(份数固定 1),
+               块内 GAP-SENSE 启用间隙传感,FORM 走纸到下一张标签的间隙重新定位,误差不逐张累积 */
+            push("+BTCO\r\n");
+            for (let c = 0; c < qty; c++) {
+                push("! 0 200 200 " + pageH + " 1\r\nPAGE-WIDTH " + pageW + "\r\nGAP-SENSE\r\n");
+                body.forEach(b => bytes.push(b));
+                push("FORM\r\nPRINT\r\n");
+            }
             return { cmd: bytesToHexSpaced(bytes) };
         }
         function refresh() {
@@ -2485,7 +2526,7 @@ PRINT
             taCmd.value = r.err ? "(" + r.err + ")" : r.cmd;
         }
         ["input", "change"].forEach(evt => {
-            wrap.querySelectorAll("#batchInput,#batchW,#batchH,#batchNarrow,#batchGap,#batchQty,#batchFeed,input[name=batchType]").forEach(el => {
+            wrap.querySelectorAll("#batchInput,#batchW,#batchH,#batchGap,#batchQty,#batchPW,#batchPH,input[name=batchType]").forEach(el => {
                 el.addEventListener(evt, refresh);
             });
         });
