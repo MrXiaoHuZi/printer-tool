@@ -414,7 +414,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.0 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.1 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -427,12 +427,13 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.8.0";
+	var APP_VERSION = "2.8.1";
 	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
-		["2.8.0", "接口凭据改为统一管理:管理员凭管理密码生成加密 cred.json 上传仓库,使用者输入凭证密钥解锁全功能,本机记住免输;不再需要人手分发 secretId / secretKey"],
+		["2.8.1", "打印机操作新增芯烨打印机的「打印机标定」「打印机初始化」;批量条码/二维码升级模板式打印:新增默认模板样式,新增打印数量与行间距设置"],
+		["2.8.0", "接口凭据改为统一管理:管理员凭管理密码生成加密,使用者输入凭证密钥解锁全功能,本机记住免输;不再需要人手分发Key"],
 		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
 		["2.7.6", "新增「分享手机版」:扫码 / 链接打开自动适配手机布局"],
@@ -1253,7 +1254,7 @@
             tdNs.appendChild(statusPill(item.networkStatusText, item.networkCss));
             tr.appendChild(tdNs);
         }
-        tr.appendChild(buildOpsCell(item.devId)); /* 打印机操作列 */
+        tr.appendChild(buildOpsCell(item.devId, item.version)); /* 打印机操作列 */
         return tr;
     }
     async function batchQueryDevices() {
@@ -1400,7 +1401,9 @@
         layout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
         qrcodeic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v.01"/></svg>',
         image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>',
-        terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>'
+        terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>',
+        calib: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4"/><path d="M12 19v4"/><path d="M1 12h4"/><path d="M19 12h4"/></svg>',
+        power: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>'
     };
     /* N617L / N536L / Y626 前缀设备不显示打印机状态列内容 */
     function noPrintStatus(devId) {
@@ -1430,7 +1433,7 @@
         const up = String(devId).replace(/\s/g, "").toUpperCase();
         return up.startsWith("XY58B") || up.startsWith("XY58C") || up.startsWith("EC");
     }
-    function buildOpsCell(devId) {
+    function buildOpsCell(devId, version) {
         const td = cell("", "cell-dim ops-col");
         td.dataset.label = "打印机操作";   /* 手机版卡片排版的字段标签 */
         if (!supportsOps(devId)) {
@@ -1443,26 +1446,39 @@
         btn.tabIndex = 0;
         btn.innerHTML = OPS_SM_ICON;
         btn.appendChild(document.createTextNode("打印机操作"));
-        const trigger = ev => { ev.stopPropagation(); openOpsModal(devId); };
+        const trigger = ev => { ev.stopPropagation(); openOpsModal(devId, version); };
         btn.onclick = trigger;
         btn.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); trigger(e); } };
         td.appendChild(btn);
         return td;
     }
-    /* 给当前弹窗加「← 返回」按钮:回到打印机操作菜单(已存在则不重复加) */
+    /* 给当前弹窗加「← 返回」按钮:回到打印机操作菜单(已存在则不重复加;固件版本随弹窗携带) */
     function opsBackBtn(devId) {
         const wrap = document.querySelector(".modal-wrap");
         const head = wrap && wrap.querySelector(".modal-head");
         if (!head || head.querySelector(".modal-back")) return;
+        const fwv = wrap.dataset && wrap.dataset.fwver ? wrap.dataset.fwver : "";
         const b = document.createElement("button");
         b.type = "button";
         b.className = "modal-back";
         b.textContent = "← 返回";
-        b.onclick = () => { wrap.remove(); openOpsModal(devId); };
+        b.onclick = () => { wrap.remove(); openOpsModal(devId, fwv); };
         head.insertBefore(b, head.firstChild);
     }
+    /* 标定 / 初始化固件门槛:版本号形如 大版本.版本号.固件版本.云固件版本(例 1.040.5280.0015),第 3 段 ≥5280 才支持 */
+    const FW_CALIB_MIN = 5280;
+    function fwCalibOk(version) {
+        const seg = String(version || "").trim().split(".");
+        const n = parseInt(seg[2], 10);
+        return !isNaN(n) && n >= FW_CALIB_MIN;
+    }
+    /* 是否 XY58B / XY58C 前缀(标定 / 初始化仅这两类设备支持) */
+    function isXY58(devId) {
+        const up = String(devId).replace(/\s/g, "").toUpperCase();
+        return up.startsWith("XY58B") || up.startsWith("XY58C");
+    }
     /* 行内操作弹窗:设备操作 + 内容打印两组,浓度 / 速度仅 EC 前缀显示 */
-    function openOpsModal(devId) {
+    function openOpsModal(devId, version) {
         const isEc = String(devId).replace(/\s/g, "").toUpperCase().startsWith("EC");
         const wrap = openModal("打印机专属操作",
             '<p class="qr-dev"></p>' +
@@ -1472,6 +1488,7 @@
             '<p class="ops-group">自定义内容打印</p>' +
             '<div class="op-grid modal-ops" id="contentGrid"></div>',
             '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        if (wrap.dataset) wrap.dataset.fwver = String(version || "");   /* 固件版本随弹窗携带,「← 返回」还原菜单时用 */
         wrap.querySelector(".qr-dev").textContent = "设备编号:" + devId;
         const addOp = (sel, op) => {
             const b = document.createElement("button");
@@ -1479,7 +1496,13 @@
             b.className = "op-btn " + op.cls;
             b.innerHTML = OPS_ICON[op.icon];
             b.appendChild(document.createTextNode(op.label));
-            b.onclick = () => { wrap.remove(); op.run(); opsBackBtn(devId); };
+            if (op.disabled) {
+                b.disabled = true;
+                b.title = op.hint || "";
+                b.classList.add("op-off");
+            } else {
+                b.onclick = () => { wrap.remove(); op.run(); opsBackBtn(devId); };
+            }
             wrap.querySelector(sel).appendChild(b);
         };
         [
@@ -1487,6 +1510,12 @@
             { icon: "wifi",    cls: "op-sky",    label: "更换网络配置",  show: true, run: () => promptSwitch(devId) },
             { icon: "receipt", cls: "op-green",  label: "打印测试小票",  show: true, run: () => printTicket(devId) },
             { icon: "tag",     cls: "op-teal",   label: "打印测试条码",  show: true, run: () => printBarcode(devId) },
+            { icon: "calib",   cls: "op-green",  label: "打印机标定",    show: isXY58(devId),
+              disabled: !fwCalibOk(version), hint: "打印机固件版本不够(需版本号 " + FW_CALIB_MIN + " 及以上)",
+              run: () => sendHexCmd(devId, "1B 83 0D 0A") },
+            { icon: "power",   cls: "op-amber",  label: "打印机初始化",  show: isXY58(devId),
+              disabled: !fwCalibOk(version), hint: "打印机固件版本不够(需版本号 " + FW_CALIB_MIN + " 及以上)",
+              run: () => sendHexCmd(devId, "1B 82 0D 0A") },
             { icon: "droplet", cls: "op-violet", label: "54云/YK-58R云改打印浓度", show: isEc, run: () => openDensityModal(devId) },
             { icon: "gauge",   cls: "op-violet", label: "54云/YK-58R云改打印速度", show: isEc, run: () => openSpeedModal(devId) },
             { icon: "upload",  cls: "op-indigo", label: "固件文件升级",  show: true, run: () => upgradeFirmware(devId) },
@@ -1951,7 +1980,7 @@ PRINT
             bytes.push(0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30);
         } else {
             /* GS k 功能B:ean13=67 / code39=69 / code128=73;CODE128 数据需 {B 编码集前缀 */
-            const bh = Math.max(40, Math.min(240, o.bh || 96));
+            const bh = Math.max(24, Math.min(240, o.bh || 96));
             let m, sendData;
             if (type === "ean13") { m = 0x43; sendData = data; }
             else if (type === "code39") { m = 0x45; sendData = data.toUpperCase(); }
@@ -2380,57 +2409,73 @@ PRINT
         };
     }
 
-    /* ---------- 2c. 批量条码 / 二维码(每行一个内容,按行序连续打印) ---------- */
+    /* ---------- 2c. 批量条码 / 二维码(模板式:多行文字 + 条码行,支持打印数量 / 行间距) ---------- */
     function printBatchLabelModal(deviceId) {
         const devId = String(deviceId || "").trim();
         if (!devId) { alert("缺少设备编号,请从查询表格行内发起操作"); return; }
+        const DEF_TPL = "打印测试\n名称:衣服\n颜色:黑色  尺码:XXL\n零售价:128元\n条码:0001234";
         const wrap = openModal("批量条码 / 二维码",
-            '<p class="modal-note">每行一个内容,按行序连续打印;条码参数与单张标签一致</p>' +
+            '<p class="modal-note">模板式标签:每行一段文字;行首写「条码:内容」表示该行打条码(一张一枚),条码格式 / 高度在下方设置</p>' +
             '<div class="chips">' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="qr"><span>二维码</span></label>' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="code128" checked><span>条码 CODE128</span></label>' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="ean13"><span>条码 EAN13</span></label>' +
             '<label class="chip-opt"><input type="radio" name="batchType" value="code39"><span>条码 CODE39</span></label>' +
             "</div>" +
-            "<label for=\"batchInput\">打印内容(每行一个)</label>" +
-            '<textarea id="batchInput" rows="6" placeholder="内容1&#10;内容2&#10;内容3" spellcheck="false"></textarea>' +
+            "<label for=\"batchInput\">打印内容(模板,每行一段)</label>" +
+            '<textarea id="batchInput" rows="5" spellcheck="false"></textarea>' +
             '<div class="mm-input-row">' +
             '<div><label for="batchW">二维码尺寸(mm)</label><input type="number" id="batchW" value="40" min="20" max="100"></div>' +
-            '<div><label for="batchH">条码高度(mm)</label><input type="number" id="batchH" value="30" min="15" max="100"></div>' +
+            '<div><label for="batchH">条码高度(mm)</label><input type="number" id="batchH" value="6" min="4" max="100"></div>' +
             '<div><label for="batchNarrow">窄条宽度(点)</label><input type="number" id="batchNarrow" value="2" min="1" max="4"></div>' +
             "</div>" +
-            '<label class="chk"><input type="checkbox" id="batchText" checked> 每张下方印内容文字</label>' +
-            "<label for=\"batchFeed\">每张走纸行数</label>" +
-            '<input type="number" id="batchFeed" value="3" min="0" max="20">' +
+            '<div class="mm-input-row">' +
+            '<div><label for="batchGap">行间距(mm)</label><input type="number" id="batchGap" value="1" min="1" max="10" step="0.5"></div>' +
+            '<div><label for="batchQty">打印数量(张)</label><input type="number" id="batchQty" value="1" min="1" max="500"></div>' +
+            '<div><label for="batchFeed">每张走纸行数</label><input type="number" id="batchFeed" value="3" min="0" max="20"></div>' +
+            "</div>" +
             "<label>生成指令(十六进制)</label>" +
             '<textarea id="batchCmd" readonly rows="5" class="mono" spellcheck="false"></textarea>',
             '<button type="button" class="btn btn-ghost" data-close>取消</button>' +
             '<button type="button" class="btn btn-primary" id="batchOk">确认打印</button>');
+        wrap.querySelector("#batchInput").value = DEF_TPL;
         const taCmd = wrap.querySelector("#batchCmd");
         function buildBatch() {
             const type = wrap.querySelector('input[name="batchType"]:checked').value;
-            const list = wrap.querySelector("#batchInput").value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-            if (!list.length) return { err: "请输入至少一行内容" };
-            for (let i = 0; i < list.length; i++) {
-                const e = codeDataErr(type, list[i]);
+            const rows = wrap.querySelector("#batchInput").value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (!rows.length) return { err: "请输入至少一行内容" };
+            /* 行首「条码:」/「二维码:」→ 该行为码行,冒号后为码内容;其余为文字行 */
+            const parsed = rows.map(r => {
+                const m = r.match(/^(?:条码|二维码)\s*[:：]\s*(.*)$/);
+                return m ? { kind: "code", data: m[1].trim() } : { kind: "text", data: r };
+            });
+            for (let i = 0; i < parsed.length; i++) {
+                if (parsed[i].kind !== "code") continue;
+                const e = codeDataErr(type, parsed[i].data);
                 if (e) return { err: "第 " + (i + 1) + " 行:" + e };
             }
             const mag = Math.max(3, Math.min(8, Math.floor((Math.max(20, Math.min(100, Number(wrap.querySelector("#batchW").value) || 40))) / 8)));
-            const bh = Math.max(40, Math.min(240, Math.floor((Math.max(15, Math.min(100, Number(wrap.querySelector("#batchH").value) || 30))) * 8 * 0.6)));
+            const hMm = Math.max(4, Math.min(100, Number(wrap.querySelector("#batchH").value) || 6));
+            const bh = Math.max(24, Math.min(240, Math.floor(hMm * 8 * 0.6)));   /* 条码高度(点),6mm → 约 29 点 */
             const narrow = Math.max(2, Math.min(6, Number(wrap.querySelector("#batchNarrow").value) || 2));
+            const gapDots = Math.max(8, Math.min(80, Math.round((Number(wrap.querySelector("#batchGap").value) || 1) * 8)));   /* 行间距 1mm=8点 */
+            const qty = Math.max(1, Math.min(500, Number(wrap.querySelector("#batchQty").value) || 1));
             const feed = Math.max(0, Math.min(20, Number(wrap.querySelector("#batchFeed").value) || 0));
-            const bytes = [0x1B, 0x40, 0x1B, 0x61, 0x01];   /* 初始化 + 居中 */
+            const bytes = [0x1B, 0x40, 0x1B, 0x61, 0x01, 0x1B, 0x33, gapDots];   /* 初始化 + 居中 + 行间距 */
             let ok = true;
-            list.forEach(line => {
-                if (!escposPushCode(bytes, type, line, { mag: mag, bh: bh, narrow: narrow })) ok = false;
-                bytes.push(0x0A);
-                if (wrap.querySelector("#batchText").checked) {
-                    const e = encodePrintLine(line);
-                    if (e === null) ok = false;
-                    else { e.forEach(b => bytes.push(b)); bytes.push(0x0A); }
-                }
+            for (let c = 0; c < qty; c++) {
+                parsed.forEach(p => {
+                    if (p.kind === "code") {
+                        if (!escposPushCode(bytes, type, p.data, { mag: mag, bh: bh, narrow: narrow })) ok = false;
+                        bytes.push(0x0A);
+                    } else {
+                        const e = encodePrintLine(p.data);
+                        if (e === null) ok = false;
+                        else { e.forEach(b => bytes.push(b)); bytes.push(0x0A); }
+                    }
+                });
                 for (let i = 0; i < feed; i++) bytes.push(0x0A);
-            });
+            }
             bytes.push(0x1B, 0x61, 0x00, 0x0A, 0x0A);
             if (!ok) return { err: "中文编码组件未加载:内容含中文时需联网" };
             return { cmd: bytesToHexSpaced(bytes) };
@@ -2440,7 +2485,7 @@ PRINT
             taCmd.value = r.err ? "(" + r.err + ")" : r.cmd;
         }
         ["input", "change"].forEach(evt => {
-            wrap.querySelectorAll("#batchInput,#batchW,#batchH,#batchNarrow,#batchFeed,#batchText,input[name=batchType]").forEach(el => {
+            wrap.querySelectorAll("#batchInput,#batchW,#batchH,#batchNarrow,#batchGap,#batchQty,#batchFeed,input[name=batchType]").forEach(el => {
                 el.addEventListener(evt, refresh);
             });
         });
@@ -2475,7 +2520,7 @@ PRINT
             "</div>" +
             '<div class="mm-input-row">' +
             '<div><label for="labelW">二维码尺寸(mm)</label><input type="number" id="labelW" value="40" min="20" max="100"></div>' +
-            '<div><label for="labelH">条码高度(mm)</label><input type="number" id="labelH" value="30" min="15" max="100"></div>' +
+            '<div><label for="labelH">条码高度(mm)</label><input type="number" id="labelH" value="30" min="4" max="100"></div>' +
             '<div><label for="labelNarrow">窄条宽度(点)</label><input type="number" id="labelNarrow" value="2" min="1" max="4"></div>' +
             "</div>" +
             '<div class="chips">' +
@@ -2503,7 +2548,7 @@ PRINT
             const narrow = Math.max(2, Math.min(6, Number(wrap.querySelector("#labelNarrow").value) || 2));
             const order = wrap.querySelector('input[name="labelOrder"]:checked').value;
             const wMm = Math.max(20, Math.min(100, Number(wrap.querySelector("#labelW").value) || 40));
-            const hMm = Math.max(15, Math.min(100, Number(wrap.querySelector("#labelH").value) || 30));
+            const hMm = Math.max(4, Math.min(100, Number(wrap.querySelector("#labelH").value) || 30));
             const verr = codeDataErr(type, data);
             if (verr) return { err: verr };
             /* 改走 ESC/POS 原生条码指令:CPCL 的 B 指令这批 58mm 固件不支持(仅支持 TEXT/BOX 画图) */
@@ -2525,7 +2570,7 @@ PRINT
             const pushCode = () => {
                 /* 指令段与批量打印共用 escposPushCode(CPCL 的 B 指令这批 58mm 固件不支持) */
                 const mag = Math.max(3, Math.min(8, Math.floor(wMm / 8)));         /* 二维码模块 3-8 */
-                const bh = Math.max(40, Math.min(240, Math.floor(hMm * 8 * 0.6))); /* 条码高度(点) */
+                const bh = Math.max(24, Math.min(240, Math.floor(hMm * 8 * 0.6))); /* 条码高度(点) */
                 if (!escposPushCode(bytes, type, data, { mag: mag, bh: bh, narrow: narrow })) ok = false;
                 bytes.push(0x0A);
             };
