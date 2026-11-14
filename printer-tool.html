@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"
         onerror="this.onerror=null;this.src='https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js'"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"
+        onerror="this.onerror=null;this.src='https://unpkg.com/qrcode-generator@1.4.4/qrcode.js'"></script>
 <script src="https://cdn.jsdelivr.net/npm/gbk.js/dist/gbk.min.js"
         onerror="this.onerror=null;this.src='https://unpkg.com/gbk.js/dist/gbk.min.js'"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"
@@ -212,6 +214,24 @@
   .dev-copy:hover .dev-id-text{text-decoration:underline}
   .dev-copy.copied{color:var(--ok)}
   .dev-copy svg{width:12px;height:12px;margin-left:4px;color:#9aa6bd;vertical-align:-1px}
+  .dev-mark-btn{font-size:11px;font-weight:500;color:#9aa6bd;cursor:pointer;margin-left:6px;white-space:nowrap}
+  .dev-mark-btn:hover{color:var(--pri);text-decoration:underline}
+  .dev-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+  .dev-tag{display:inline-block;font-weight:600;font-size:11px;line-height:16px;padding:1px 8px;border-radius:9px;color:#fff;white-space:nowrap;cursor:pointer;opacity:.92}
+  .dev-tag:hover{opacity:1;text-decoration:underline}
+  .tag-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;border:2px solid var(--line);background:#fff;color:var(--text);cursor:pointer;margin:0 8px 8px 0}
+  .tag-chip.on{color:#fff;border-color:transparent}
+  .tag-chip.on:hover,.tag-chip.off:hover{filter:brightness(1.08)}
+  .tag-color-dot{width:14px;height:14px;border-radius:50%;flex:none;border:2px solid rgba(0,0,0,.08)}
+  .tag-def-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .tag-def-row .dev-tag{cursor:default;opacity:1}
+  .tag-def-row .dev-tag:hover{text-decoration:none}
+  .tag-del{color:var(--err);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px;margin-left:auto}
+  .tag-del:hover{background:#fde8e8}
+  .tag-color-opt{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex:none}
+  .tag-color-opt.sel{border-color:var(--text);box-shadow:0 0 0 2px #fff inset}
+  body.dark .tag-chip{background:#1d2739;color:var(--text)}
+  body.dark .tag-del:hover{background:#3a2730}
   .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
   .pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
   .pill-ok{background:#ecfdf5;color:#15803d}
@@ -414,7 +434,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.1 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.2 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -427,12 +447,13 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.8.1";
+	var APP_VERSION = "2.8.2";
 	/* 手机版解锁「打印机操作」列的管理密码(版本弹窗连点标题 5 次后输入) */
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
-		["2.8.1", "打印机操作新增芯烨打印机的「打印机标定」「打印机初始化」;批量条码/二维码升级模板式打印:新增默认模板样式,内容左对齐,新增打印数量、行间距与纸张大小(默认 40×30mm)设置,指令改为 CPCL 标签格式;修复连续打印越打越偏移:每张独立定位、按标签间隙自动对齐;打印测试条码改为两行文字并内缩 2mm 方框;修复子弹窗返回后标定/初始化按钮误置灰"],
+		["2.8.2", "设备 ID 新增自定义标记;云扫码枪配网二维码弹窗新增「直接生成联网码」"],
+		["2.8.1", "打印机操作新增芯烨打印机的「打印机标定」「打印机初始化」;批量条码/二维码模板优化"],
 		["2.8.0", "接口凭据改为统一管理:管理员凭管理密码生成加密,使用者输入凭证密钥解锁全功能,本机记住免输;不再需要人手分发Key"],
 		["2.7.8", "修复深色模式下结果表格底色发白、文字看不清;「固件链接升级」支持按型号选版本"],
 		["2.7.7", "修复手机版查询结果排版:改为一设备一卡片的列表展示,不再横向滚动错位;弹窗高度适配手机屏幕"],
@@ -1191,6 +1212,148 @@
         s.textContent = text;
         return s;
     }
+    /* ========== 设备 ID 标记:默认「未处理完」(红) / 「升级固件」(绿),支持自定义,按设备本机记住 ========== */
+    const TAG_DEFS_KEY = "YK_TAG_DEFS";      /* 标签定义:[{name, color}] */
+    const DEV_TAGS_KEY = "YK_DEV_TAGS";      /* 设备 → 标签名数组 */
+    const TAG_COLORS = ["#e5484d", "#f5a623", "#2ea44f", "#3b82f6", "#8b5cf6", "#0ea5a4", "#ec4899", "#6b7280"];
+    const DEFAULT_TAG_DEFS = [
+        { name: "未处理完", color: "#e5484d" },
+        { name: "升级固件", color: "#2ea44f" }
+    ];
+    function loadTagDefs() {
+        try {
+            const a = JSON.parse(localStorage.getItem(TAG_DEFS_KEY) || "null");
+            if (Array.isArray(a) && a.length) return a.filter(t => t && t.name);
+        } catch (e) { /* 忽略 */ }
+        return DEFAULT_TAG_DEFS.map(t => ({ name: t.name, color: t.color }));
+    }
+    function saveTagDefs(list) { try { localStorage.setItem(TAG_DEFS_KEY, JSON.stringify(list)); } catch (e) { /* 忽略 */ } }
+    function loadDevTags() {
+        try {
+            const o = JSON.parse(localStorage.getItem(DEV_TAGS_KEY) || "{}");
+            return (o && typeof o === "object") ? o : {};
+        } catch (e) { return {}; }
+    }
+    function saveDevTags(o) { try { localStorage.setItem(DEV_TAGS_KEY, JSON.stringify(o)); } catch (e) { /* 忽略 */ } }
+    function devTagKey(devId) { return String(devId || "").replace(/\s/g, "").toUpperCase(); }
+    function getDevTagNames(devId) { return loadDevTags()[devTagKey(devId)] || []; }
+    /* 渲染设备 ID 下方的标记徽标;点徽标也可打开编辑 */
+    function renderDevTags(rowEl, devId) {
+        rowEl.innerHTML = "";
+        const defs = loadTagDefs();
+        getDevTagNames(devId).forEach(n => {
+            const def = defs.find(d => d.name === n);
+            if (!def) return;   /* 标签定义已被删除:不再显示 */
+            const b = document.createElement("span");
+            b.className = "dev-tag";
+            b.style.background = def.color;
+            b.textContent = def.name;
+            b.title = "点击编辑标记";
+            b.onclick = ev => { ev.stopPropagation(); openDevTagModal(devId, rowEl); };
+            rowEl.appendChild(b);
+        });
+    }
+    /* 标记编辑弹窗:勾选 / 取消即时生效;可新增自定义彩色标签、删除自定义标签 */
+    function openDevTagModal(devId, tagRowEl) {
+        const key = devTagKey(devId);
+        let defs = loadTagDefs();
+        let selected = getDevTagNames(devId).slice();
+        let selColor = TAG_COLORS[0];
+        const wrap = openModal("设备标记",
+            '<p class="modal-note">点击标签即勾选 / 取消,立即生效并显示在设备 ID 下方;可新增自定义彩色标签</p>' +
+            '<div id="tagChips"></div>' +
+            '<p class="ops-group">自定义标签管理</p>' +
+            '<div id="tagDefList"></div>' +
+            '<div style="margin-top:10px"><label for="tagName">新增标签名称</label>' +
+            '<input type="text" id="tagName" maxlength="10" placeholder="最多 10 个字" autocomplete="off"></div>' +
+            "<label>颜色</label>" +
+            '<div id="tagColors" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"></div>' +
+            '<button type="button" class="btn btn-primary" id="tagAdd" style="margin-top:12px;width:100%">添加标签</button>',
+            '<button type="button" class="btn btn-ghost" data-close>关闭</button>');
+        function persistDev() {
+            const all = loadDevTags();
+            if (selected.length) all[key] = selected; else delete all[key];
+            saveDevTags(all);
+            renderDevTags(tagRowEl, devId);
+        }
+        function renderChips() {
+            const box = wrap.querySelector("#tagChips");
+            box.innerHTML = "";
+            defs.forEach(def => {
+                const b = document.createElement("button");
+                b.type = "button";
+                const on = selected.indexOf(def.name) >= 0;
+                b.className = "tag-chip " + (on ? "on" : "off");
+                b.style.background = on ? def.color : "";
+                if (on) b.style.borderColor = "transparent";
+                const dot = document.createElement("span");
+                dot.className = "tag-color-dot";
+                dot.style.background = def.color;
+                b.appendChild(dot);
+                b.appendChild(document.createTextNode(def.name));
+                b.onclick = () => {
+                    const i = selected.indexOf(def.name);
+                    if (i >= 0) selected.splice(i, 1); else selected.push(def.name);
+                    persistDev();
+                    renderChips();
+                };
+                box.appendChild(b);
+            });
+        }
+        function renderDefs() {
+            const box = wrap.querySelector("#tagDefList");
+            box.innerHTML = "";
+            defs.forEach(def => {
+                const row = document.createElement("div");
+                row.className = "tag-def-row";
+                const tag = document.createElement("span");
+                tag.className = "dev-tag";
+                tag.style.background = def.color;
+                tag.textContent = def.name;
+                row.appendChild(tag);
+                const del = document.createElement("span");
+                del.className = "tag-del";
+                del.textContent = "删除";
+                del.onclick = () => {
+                    if (!confirm("删除标签「" + def.name + "」?所有设备上的该标记将一并移除")) return;
+                    defs = defs.filter(d => d.name !== def.name);
+                    selected = selected.filter(n => n !== def.name);
+                    saveTagDefs(defs);
+                    persistDev();
+                    renderChips();
+                    renderDefs();
+                };
+                row.appendChild(del);
+                box.appendChild(row);
+            });
+            if (!defs.length) box.innerHTML = '<p style="font-size:12px;color:#999;margin:4px 0">暂无标签,先在下方新增</p>';
+        }
+        function renderColors() {
+            const box = wrap.querySelector("#tagColors");
+            box.innerHTML = "";
+            TAG_COLORS.forEach(c => {
+                const o = document.createElement("span");
+                o.className = "tag-color-opt" + (c === selColor ? " sel" : "");
+                o.style.background = c;
+                o.title = c;
+                o.onclick = () => { selColor = c; renderColors(); };
+                box.appendChild(o);
+            });
+        }
+        wrap.querySelector("#tagAdd").onclick = function () {
+            const name = wrap.querySelector("#tagName").value.trim();
+            if (!name) { alert("请输入标签名称"); return; }
+            if (defs.some(d => d.name === name)) { alert("标签「" + name + "」已存在"); return; }
+            defs.push({ name: name, color: selColor });
+            saveTagDefs(defs);
+            wrap.querySelector("#tagName").value = "";
+            renderChips();
+            renderDefs();
+        };
+        renderChips();
+        renderDefs();
+        renderColors();
+    }
     function buildResultRow(item) {
         const tr = document.createElement("tr");
         tr.dataset.devid = item.devId;
@@ -1205,6 +1368,20 @@
         idSpan.textContent = item.devId;
         tdDev.appendChild(idSpan);
         tdDev.insertAdjacentHTML("beforeend", COPY_SM_ICON);
+        /* 标记入口(点徽标或「标记」打开编辑弹窗,点其余区域仍是复制) */
+        const markBtn = document.createElement("span");
+        markBtn.className = "dev-mark-btn";
+        markBtn.textContent = "标记";
+        markBtn.title = "设置 / 编辑该设备的标记";
+        tdDev.appendChild(markBtn);
+        const tagRow = document.createElement("div");
+        tagRow.className = "dev-tags";
+        tdDev.appendChild(tagRow);
+        renderDevTags(tagRow, item.devId);
+        const markTrigger = ev => { ev.stopPropagation(); openDevTagModal(item.devId, tagRow); };
+        markBtn.onclick = markTrigger;
+        tagRow.onclick = markTrigger;
+        markBtn.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); markTrigger(e); } };
         const copyTrigger = ev => { ev.stopPropagation(); copyDeviceId(item.devId, idSpan); };
         tdDev.onclick = copyTrigger;
         tdDev.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); copyTrigger(e); } };
@@ -1532,35 +1709,140 @@
         ].forEach(op => addOp("#contentGrid", op));
     }
 
-    /* 配网二维码弹窗(URL 以 textContent 写入,修复拼接注入隐患) */
+    /* 配网二维码弹窗(URL 以 textContent 写入,修复拼接注入隐患);下半段:直接生成联网码(免微信小程序) */
     function openCardQrModal(devId) {
         const cleanDevId = devId.replace(/\s/g, "");
         const devUp = cleanDevId.toUpperCase();
-        let qrUrl = null;
+        let qrUrl = null, fam = null;
         if (devUp.startsWith("N617") || devUp.startsWith("N536")) {
+            fam = "SC01";
             qrUrl = "https://yk1.co/wifi?s=260123&m=SC01&d=" + encodeURIComponent(cleanDevId);
         } else if (devUp.startsWith("Y626")) {
+            fam = "SC02";
             qrUrl = "https://yk1.co/wifi?s=260123&m=SC02&d=" + encodeURIComponent(cleanDevId);
         } else if (devUp.startsWith("XY58B") || devUp.startsWith("XY58C")) {
+            fam = "XY58";
             qrUrl = "https://yk1.co/wifi?s=2503123199&d=" + encodeURIComponent(cleanDevId) + "&m=YK-58C";
         } else if (devUp.startsWith("EC")) {
+            fam = "EC";
             qrUrl = "https://yk1.co/wifi?s=2503123199&d=" + encodeURIComponent(cleanDevId) + "&m=YK-58yunR";
         } else {
             alert("该设备ID前缀不支持生成配网二维码!");
             return;
         }
+        /* 直接生成联网码仅对 N536L / N617L / Y626 开头设备开放 */
+        const atOk = devUp.startsWith("N536L") || devUp.startsWith("N617L") || devUp.startsWith("Y626");
+        const DOMAIN_KEY = "YK_AT_DOMAIN_" + fam;   /* 服务器域名按设备前缀分别记住 */
+        const WIFI_KEY = "YK_AT_WIFI";              /* 上次用的 WiFi 全局记住,下次免输 */
+        const AT_HTML = atOk ? (
+            '<p class="ops-group">直接生成联网码(免微信小程序)</p>' +
+            '<p class="modal-note">输入 WiFi 名称 / 密码,自动读取设备密钥并按扫码枪规则生成联网码二维码,扫码枪直接扫屏;WiFi 与域名本机记住</p>' +
+            '<div class="mm-input-row">' +
+            '<div><label for="atSsid">WiFi 名称</label><input type="text" id="atSsid" autocomplete="off"></div>' +
+            '<div><label for="atPsk">WiFi 密码</label><input type="text" id="atPsk" autocomplete="off"></div>' +
+            "</div>" +
+            '<label for="atDomain">服务器域名</label>' +
+            '<input type="text" id="atDomain" spellcheck="false" placeholder="3a7c6ead8d.st1.iotda-device.cn-south-1.myhuaweicloud.com">' +
+            '<label for="atSecret">设备密钥(留空自动读取)</label>' +
+            '<input type="text" id="atSecret" spellcheck="false" autocomplete="off">' +
+            '<button type="button" class="btn btn-primary" id="atGen" style="margin-top:10px">生成联网码</button>' +
+            '<div id="atOut" style="display:none">' +
+            '<div style="text-align:center;margin-top:12px"><div id="atQrBox" style="display:inline-block;background:#fff;padding:14px;border-radius:10px"></div></div>' +
+            '<textarea id="atCmd" rows="3" class="mono" readonly spellcheck="false" style="margin-top:10px"></textarea>' +
+            '<button type="button" class="btn btn-ghost" id="atCopy" style="margin-top:8px;width:100%">复制联网码</button>' +
+            "</div>"
+        ) : "";
         const wrap = openModal("配网二维码",
-            '<p class="qr-dev"></p><p class="qr-url"></p><div id="qrShowBox"></div>',
+            '<p class="qr-dev"></p><p class="qr-url"></p><div id="qrShowBox"></div>' + AT_HTML,
             '<button type="button" class="btn btn-ghost" data-close>关闭</button>',
             "qr-modal");
         wrap.querySelector(".qr-dev").textContent = "设备编号:" + cleanDevId;
         wrap.querySelector(".qr-url").textContent = qrUrl;
-        const box = wrap.querySelector("#qrShowBox");
+        const qrBox = wrap.querySelector("#qrShowBox");
         if (typeof QRCode === "undefined") {
-            box.innerHTML = '<p style="font-size:12px;color:#999;padding:30px 10px;">二维码组件未加载(需联网获取 CDN)</p>';
+            qrBox.innerHTML = '<p style="font-size:12px;color:#999;padding:30px 10px;">二维码组件未加载(需联网获取 CDN)</p>';
         } else {
-            new QRCode(box, { text: qrUrl, width: 220, height: 220 });
+            new QRCode(qrBox, { text: qrUrl, width: 220, height: 220 });
         }
+        /* ---------- 直接生成联网码(仅 N536L / N617L / Y626 开头设备) ---------- */
+        if (!atOk) return;
+        const inSsid = wrap.querySelector("#atSsid");
+        const inPsk = wrap.querySelector("#atPsk");
+        const inDomain = wrap.querySelector("#atDomain");
+        const inSecret = wrap.querySelector("#atSecret");
+        const outBox = wrap.querySelector("#atOut");
+        const qr2Box = wrap.querySelector("#atQrBox");
+        const taCmd = wrap.querySelector("#atCmd");
+        try {
+            const saved = JSON.parse(localStorage.getItem(WIFI_KEY) || "null");
+            if (saved) { inSsid.value = saved.ssid || ""; inPsk.value = saved.psk || ""; }
+        } catch (e) { /* 忽略 */ }
+        inDomain.value = localStorage.getItem(DOMAIN_KEY) || ((fam === "SC01" || fam === "SC02") ? "3a7c6ead8d.st1.iotda-device.cn-south-1.myhuaweicloud.com" : "");
+        /* 北京时间 yyyymmddhh(联网码 CLIENTID 末段时间戳) */
+        function beijingStamp() {
+            const d = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
+            const p = n => String(n).padStart(2, "0");
+            return "" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + p(d.getHours());
+        }
+        /* 扫码枪连接密码:HMAC-SHA256(key=时间戳, msg=设备密钥),64 位十六进制 */
+        async function atPassword(secret, ts) {
+            const enc = new TextEncoder();
+            const key = await crypto.subtle.importKey("raw", enc.encode(ts), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+            return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(secret)))).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+        wrap.querySelector("#atGen").onclick = async function () {
+            const ssid = inSsid.value.trim();
+            const psk = inPsk.value.trim();
+            const domain = inDomain.value.trim();
+            if (!ssid) { alert("请输入 WiFi 名称"); inSsid.focus(); return; }
+            if (!psk) { alert("请输入 WiFi 密码"); inPsk.focus(); return; }
+            if (!domain) { alert("请输入服务器域名(与小程序里一致)"); inDomain.focus(); return; }
+            if (/[;,]/.test(ssid) || /[;,]/.test(psk) || /[;,]/.test(domain)) { alert("WiFi 名称 / 密码 / 域名不能包含逗号或分号(会被识别为字段分隔符)"); return; }
+            if (!credCryptoOk()) { alert("当前浏览器不支持加密组件(crypto.subtle),请改用 Chrome / Edge / Safari 等现代浏览器"); return; }
+            let secret = inSecret.value.trim();
+            if (!secret) {
+                const r = await apiCall("ec-printer-device-mqttInfo", { deviceId: cleanDevId });
+                if (!r.ok || !r.data || !r.data.data || !r.data.data.authInfo || !r.data.data.authInfo.secret) {
+                    alert("读取设备密钥失败:" + (r.msg || (r.data && r.data.msg) || "无返回") + ";可在「设备密钥」框手动粘贴后重试");
+                    return;
+                }
+                secret = r.data.data.authInfo.secret;
+            }
+            const ts = beijingStamp();
+            const pw = await atPassword(secret, ts);
+            const cmd = "AT+URL=2," + domain + "," + cleanDevId + "," + pw + ",WFSCAN;AT+RAP=" + ssid + "," + psk + ";AT+CLIENTID=" + cleanDevId + "_0_0_" + ts;
+            try { localStorage.setItem(DOMAIN_KEY, domain); localStorage.setItem(WIFI_KEY, JSON.stringify({ ssid, psk })); } catch (e) { /* 忽略 */ }
+            taCmd.value = cmd;
+            qr2Box.innerHTML = "";
+            if (typeof qrcode === "undefined") {
+                qr2Box.innerHTML = '<p style="font-size:12px;color:#999;">二维码组件未加载(需联网获取 CDN)</p>';
+            } else {
+                try {
+                    /* 长内容(64 位密码 + 中文 WiFi 名):qrcode-generator 按 UTF-8 字节正确计算版本,
+                       修复 qrcodejs 对中文按 1 字节估算导致选错版本、code length overflow 渲染空白的问题 */
+                    qrcode.stringToBytes = function (s) { return Array.from(new TextEncoder().encode(s)); };
+                    let qrObj = null;
+                    for (let t = 2; t <= 40; t++) {
+                        try { const q = qrcode(t, "M"); q.addData(cmd, "Byte"); q.make(); qrObj = q; break; } catch (e) { /* 版本不够,加大重试 */ }
+                    }
+                    if (!qrObj) {
+                        qr2Box.innerHTML = '<p style="font-size:12px;color:#999;">内容过长,无法生成二维码</p>';
+                    } else {
+                        /* cellSize 5 + 8 模块白边(静区),SVG 可缩放,固定 320px 显示 */
+                        qr2Box.innerHTML = qrObj.createSvgTag({ cellSize: 5, margin: 8, scalable: true });
+                        const svg = qr2Box.querySelector("svg");
+                        if (svg) { svg.style.width = "320px"; svg.style.height = "auto"; svg.style.display = "block"; }
+                    }
+                } catch (e) {
+                    qr2Box.innerHTML = '<p style="font-size:12px;color:#999;">二维码生成失败:' + e + "</p>";
+                }
+            }
+            outBox.style.display = "block";
+        };
+        wrap.querySelector("#atCopy").onclick = function () {
+            if (!taCmd.value) { alert("请先生成联网码"); return; }
+            legacyCopy(taCmd.value, () => alert("已复制到剪贴板"));
+        };
     }
 
     /* 批量查询输入框:宽度随最长行内容自动调节(240–560px) */
