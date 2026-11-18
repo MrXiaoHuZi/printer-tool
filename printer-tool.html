@@ -130,6 +130,12 @@
     display:inline-flex;align-items:center;font-size:13px;font-weight:600;color:#5b6472;flex:none}
   .modal-back:hover{background:#e4e9f2}
   body.dark .modal-back{background:#243049;color:#c7d2e5}
+  /* 弹窗头部右侧按钮组:配网二维码的「挂起」放在 × 左边 */
+  .modal-head-tools{display:flex;align-items:center;gap:8px;flex:none}
+  .modal-suspend{height:30px;padding:0 12px;border:none;background:#f1f4f9;border-radius:8px;cursor:pointer;font-family:inherit;
+    font-size:13px;font-weight:600;color:#5b6472}
+  .modal-suspend:hover{background:#e4e9f2}
+  body.dark .modal-suspend{background:#243049;color:#c7d2e5}
   /* 版本更新记录列表 */
   .ver-his-item{padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px;line-height:1.7}
   .ver-his-item:last-child{border-bottom:none}
@@ -479,7 +485,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.6 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.7 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -492,7 +498,7 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.8.6";
+	var APP_VERSION = "2.8.7";
 	/* 原地升级持久化:升级时新版会缓存到本机(localStorage);下次打开 / 刷新本文件时,若缓存版本比本文件新,
 	   在页面启动前直接用缓存整页替换——升级一次,刷新 / 重开浏览器 / 重启电脑都不回退,仍不用重新下载文件 */
 	(function hotRestore() {
@@ -519,6 +525,7 @@
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
+		["2.8.7", "1.取消扫码枪WiFi信息上次记忆功能<br>2.更换挂起按钮位置<br>3.支持挂起多个联网码"],
 		["2.8.6", "1.修复免下载更新问题"],
 		["2.8.5", "1.优化使用体验"],
 		["2.8.4", "1.优化在线版<br>2.增加免下载更新"],
@@ -1951,11 +1958,10 @@
         }
         /* 直接生成联网码仅对 N536L / N617L / Y626 开头设备开放 */
         const atOk = devUp.startsWith("N536L") || devUp.startsWith("N617L") || devUp.startsWith("Y626");
-        const DOMAIN_KEY = "YK_AT_DOMAIN_" + fam;   /* 服务器域名按设备前缀分别记住 */
-        const WIFI_KEY = "YK_AT_WIFI";              /* 上次用的 WiFi 全局记住,下次免输 */
+        const DOMAIN_KEY = "YK_AT_DOMAIN_" + fam;   /* 服务器域名按设备前缀分别记住(WiFi 名称 / 密码不再记忆) */
         const AT_HTML = atOk ? (
             '<p class="ops-group">直接生成联网码(免微信小程序)</p>' +
-            '<p class="modal-note">输入 WiFi 名称 / 密码,自动读取设备密钥并按扫码枪规则生成联网码二维码,扫码枪直接扫屏;WiFi 与域名本机记住</p>' +
+            '<p class="modal-note">输入 WiFi 名称 / 密码,自动读取设备密钥并按扫码枪规则生成联网码二维码,扫码枪直接扫屏;WiFi 每次重新填写,服务器域名本机记住</p>' +
             '<div class="mm-input-row">' +
             '<div><label for="atSsid">WiFi 名称</label><input type="text" id="atSsid" autocomplete="off"></div>' +
             '<div><label for="atPsk">WiFi 密码</label><input type="text" id="atPsk" autocomplete="off"></div>' +
@@ -1973,10 +1979,25 @@
         ) : "";
         const wrap = openModal("配网二维码",
             '<p class="qr-dev"></p><p class="qr-url"></p><div id="qrShowBox"></div>' + AT_HTML,
-            '<button type="button" class="btn btn-ghost" id="qrSuspend">挂起</button>' +
             '<button type="button" class="btn btn-ghost" data-close>关闭</button>',
             "qr-modal");
-        wrap.querySelector("#qrSuspend").onclick = suspendQrModal;
+        /* 「挂起」放到弹窗头部 × 左边(直接生成联网码的设备才有意义) */
+        if (atOk) {
+            const head = wrap.querySelector(".modal-head");
+            const tools = document.createElement("div");
+            tools.className = "modal-head-tools";
+            const xBtn = head.querySelector(".modal-x");
+            head.appendChild(tools);
+            tools.appendChild(xBtn);
+            const sus = document.createElement("button");
+            sus.type = "button";
+            sus.className = "modal-suspend";
+            sus.id = "qrSuspend";
+            sus.textContent = "挂起";
+            sus.title = "收起为悬浮图标(可同时挂起多个),点图标恢复";
+            sus.onclick = () => suspendQrModal(wrap);
+            tools.insertBefore(sus, xBtn);
+        }
         wrap.querySelector(".qr-dev").textContent = "设备编号:" + cleanDevId;
         wrap.querySelector(".qr-url").textContent = qrUrl;
         const qrBox = wrap.querySelector("#qrShowBox");
@@ -1994,10 +2015,8 @@
         const outBox = wrap.querySelector("#atOut");
         const qr2Box = wrap.querySelector("#atQrBox");
         const taCmd = wrap.querySelector("#atCmd");
-        try {
-            const saved = JSON.parse(localStorage.getItem(WIFI_KEY) || "null");
-            if (saved) { inSsid.value = saved.ssid || ""; inPsk.value = saved.psk || ""; }
-        } catch (e) { /* 忽略 */ }
+        /* WiFi 名称 / 密码不再记忆:清掉旧版本存过的内容,每次由用户重新填写 */
+        try { localStorage.removeItem("YK_AT_WIFI"); } catch (e) { /* 忽略 */ }
         inDomain.value = localStorage.getItem(DOMAIN_KEY) || ((fam === "SC01" || fam === "SC02") ? "3a7c6ead8d.st1.iotda-device.cn-south-1.myhuaweicloud.com" : "");
         /* 北京时间 yyyymmddhh(联网码 CLIENTID 末段时间戳) */
         function beijingStamp() {
@@ -2032,7 +2051,7 @@
             const ts = beijingStamp();
             const pw = await atPassword(secret, ts);
             const cmd = "AT+URL=2," + domain + "," + cleanDevId + "," + pw + ",WFSCAN;AT+RAP=" + ssid + "," + psk + ";AT+CLIENTID=" + cleanDevId + "_0_0_" + ts;
-            try { localStorage.setItem(DOMAIN_KEY, domain); localStorage.setItem(WIFI_KEY, JSON.stringify({ ssid, psk })); } catch (e) { /* 忽略 */ }
+            try { localStorage.setItem(DOMAIN_KEY, domain); } catch (e) { /* 忽略 */ }
             taCmd.value = cmd;
             qr2Box.innerHTML = "";
             if (typeof qrcode === "undefined") {
@@ -2102,16 +2121,17 @@
         return cv;
     }
 
-    /* ========== 联网码挂起:整窗收起为左侧可拖动悬浮图标,点图标恢复窗口(输入 / 联网码原样保留) ========== */
-    var QR_SUSPEND = null;
-    function suspendQrModal() {
-        const wrap = document.querySelector(".modal-wrap");
-        if (!wrap || !wrap.querySelector("#atCmd")) return;
+    /* ========== 联网码挂起:整窗收起为左侧可拖动悬浮图标,可同时挂起多个,点哪个图标恢复哪个窗口(输入 / 联网码原样保留) ========== */
+    var QR_SUSPEND_LIST = [];   /* 已挂起的联网码弹窗:每项 { wrap, float } */
+    function suspendQrModal(wrap) {
+        wrap = wrap || document.querySelector(".modal-wrap");
+        if (!wrap || !wrap.querySelector("#atCmd") || wrap.dataset.suspended === "1") return;
+        wrap.dataset.suspended = "1";
         wrap.remove();                                   /* 摘下弹窗(保留元素与监听,恢复时原样装回) */
-        if (QR_SUSPEND) QR_SUSPEND.float.remove();       /* 只保留一个挂起图标,重复挂起以最后一次为准 */
         const float = document.createElement("div");
         float.className = "qr-float";
-        float.title = "点击恢复窗口 · 可拖动";
+        const devText = (wrap.querySelector(".qr-dev") || {}).textContent || "";
+        float.title = "点击恢复窗口 · 可拖动" + (devText ? " · " + devText : "");
         const src = wrap.querySelector("#atQrBox canvas");
         if (src) {
             /* 生成过联网码:缩略图用标签画布等比缩小 */
@@ -2131,10 +2151,14 @@
         tag.textContent = "联网码";
         float.appendChild(tag);
         float.style.left = "12px";                       /* 默认靠左显示 */
-        float.style.top = Math.round(window.innerHeight * 0.35) + "px";
+        /* 多个图标靠左纵向排开,超出屏幕高度时往回压 */
+        const baseTop = Math.round(window.innerHeight * 0.35);
+        const top = baseTop + QR_SUSPEND_LIST.length * 96;
+        float.style.top = Math.max(8, Math.min(window.innerHeight - 120, top)) + "px";
         document.body.appendChild(float);
-        QR_SUSPEND = { wrap: wrap, float: float };
-        /* 拖动 / 点击区分:位移超阈值算拖动,原地点击恢复窗口 */
+        const item = { wrap: wrap, float: float };
+        QR_SUSPEND_LIST.push(item);
+        /* 拖动 / 点击区分:位移超阈值算拖动,原地点击恢复该窗口 */
         let sx = 0, sy = 0, sl = 0, st = 0, moved = false, dragging = false;
         float.addEventListener("pointerdown", e => {
             if (e.button !== undefined && e.button !== 0) return;
@@ -2154,17 +2178,18 @@
         });
         float.addEventListener("pointerup", () => {
             dragging = false;
-            if (!moved) restoreQrSuspense();
+            if (!moved) restoreQrSuspense(item);
         });
         float.addEventListener("pointercancel", () => { dragging = false; });
     }
-    function restoreQrSuspense() {
-        if (!QR_SUSPEND) return;
-        const s = QR_SUSPEND;
-        QR_SUSPEND = null;
-        s.float.remove();
+    function restoreQrSuspense(item) {
+        const i = QR_SUSPEND_LIST.indexOf(item);
+        if (i < 0) return;
+        QR_SUSPEND_LIST.splice(i, 1);
+        item.float.remove();
+        delete item.wrap.dataset.suspended;
         closeModalWrap();                     /* 若正开着别的弹窗,先关掉 */
-        document.body.appendChild(s.wrap);    /* 挂起的联网码弹窗原样恢复 */
+        document.body.appendChild(item.wrap); /* 挂起的联网码弹窗原样恢复 */
     }
 
     /* 批量查询输入框:宽度随最长行内容自动调节(240–560px) */
