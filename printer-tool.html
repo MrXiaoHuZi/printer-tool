@@ -67,6 +67,85 @@
   .tip{font-size:12px;color:var(--muted)}
   .empty-tip{text-align:center;color:var(--muted);font-size:13px;padding:18px;border:1px dashed var(--line);border-radius:10px;margin-top:14px}
 
+  /* ========== 云盒兼容性搜索 ========== */
+  .ic-teal{background:#ecfdf5;border:1px solid #d1fae5;color:#0d9488}
+  .cb-search{position:relative;display:flex;align-items:center}
+  .cb-search>svg{position:absolute;left:13px;width:17px;height:17px;color:var(--muted);pointer-events:none}
+  #cbInput{width:100%;padding:12px 44px 12px 40px;border:1px solid var(--line);border-radius:12px;background:#fbfcfe;
+    color:var(--text);font-size:14.5px;font-family:inherit;line-height:1.4}
+  #cbInput:focus{outline:2px solid #bfdbfe;border-color:var(--pri)}
+  .cb-clear{position:absolute;right:7px;width:28px;height:28px;border:none;border-radius:8px;background:#eaeff7;
+    color:#5b6472;font-size:17px;line-height:1;cursor:pointer;display:grid;place-items:center}
+  .cb-clear[hidden]{display:none}
+  .cb-clear:hover{background:#dfe6f2}
+  .cb-quick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+  .cb-quick[hidden]{display:none}
+  .cb-q-label{font-size:12px;color:var(--muted);margin-right:2px}
+  .cb-qchip{padding:4px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);
+    font-size:12px;font-family:inherit;cursor:pointer}
+  .cb-qchip:hover{border-color:#93c5fd;color:var(--pri);background:#f3f8ff}
+  .cb-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;
+    font-size:12px;color:var(--muted)}
+  .cb-bar a{color:var(--pri);text-decoration:none;font-weight:600}
+  .cb-bar a:hover{text-decoration:underline}
+  .cb-tips{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fbfcfe}
+  .cb-tips summary{cursor:pointer;padding:8px 0;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .cb-tips summary:hover{color:var(--text)}
+  .cb-tips[open] summary{color:var(--text);border-bottom:1px dashed var(--line)}
+  .cb-tip-body{padding:8px 0 10px;font-size:12.5px;color:var(--muted);line-height:1.8}
+  .cb-tip-body p{margin:0 0 4px}
+  .cb-tip-body b{color:var(--text)}
+  .cb-tip-body ul{margin:2px 0 4px 18px}
+  .cb-tip-src{font-size:11.5px;opacity:.85}
+  .cb-results{display:grid;gap:10px;margin-top:14px;grid-template-columns:1fr}
+  .cb-results[hidden]{display:none}
+  @media(min-width:880px){.cb-results{grid-template-columns:1fr 1fr}}
+  .cb-item{display:flex;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;min-width:0}
+  .cb-thumb{position:relative;flex:none;width:88px;height:88px;border-radius:9px;border:1px solid var(--line);
+    background:#f6f8fc;padding:0;cursor:zoom-in;overflow:hidden;display:grid;place-items:center}
+  .cb-thumb>svg{width:28px;height:28px;color:#c2cbdc}
+  .cb-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+  .cb-thumb.noimg{cursor:default}
+  .cb-imgn{position:absolute;right:3px;bottom:3px;padding:1px 5px;border-radius:6px;background:rgba(15,23,42,.62);
+    color:#fff;font-size:10px;line-height:1.5;pointer-events:none}
+  .cb-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .cb-brand{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.4;word-break:break-word}
+  .cb-model{font-size:14.5px;font-weight:700;line-height:1.35;word-break:break-word}
+  .cb-model mark,.cb-brand mark{background:#fde68a;color:#7c2d12;padding:0 1px;border-radius:3px}
+  .cb-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:1px}
+  .cb-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 8px;
+    border-radius:999px;white-space:nowrap}
+  .cb-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+  .cb-yes{background:#ecfdf5;color:#15803d}
+  .cb-no{background:#fef2f2;color:#dc2626}
+  .cb-unknown{background:#f1f4f9;color:#64748b}
+  .cb-nr{background:#fffbeb;color:#b45309}
+  .cb-lim{background:#eff6ff;color:#2563eb}
+  .cb-note{font-size:12px;color:var(--muted);line-height:1.5;word-break:break-word}
+  .cb-more{grid-column:1/-1;text-align:center;font-size:12px;color:var(--muted);padding:8px}
+  .cb-none{grid-column:1/-1;text-align:center;padding:16px;border:1px dashed var(--line);border-radius:10px;
+    font-size:13px;color:var(--muted);line-height:1.7}
+  .cb-gal{display:grid;gap:10px}
+  .cb-gal img{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .modal-box.cb-gal-modal{max-width:640px}
+  body.dark #cbInput{background:#101726;color:var(--text);border-color:var(--line)}
+  body.dark .cb-clear{background:#243049;color:#c7d2e5}
+  body.dark .cb-clear:hover{background:#2c3a55}
+  body.dark .cb-qchip{background:#1d2739;color:var(--muted)}
+  body.dark .cb-qchip:hover{background:#243049;color:#a9c3ef;border-color:#3b82f6}
+  body.dark .cb-tips{background:#101726;border-color:var(--line)}
+  body.dark .cb-item{background:#101726}
+  body.dark .cb-thumb{background:#0d1320}
+  body.dark .cb-model mark,body.dark .cb-brand mark{background:#7c5a10;color:#fde68a}
+  body.dark .cb-yes{background:#0d3524;color:#4ade80}
+  body.dark .cb-no{background:#3a1416;color:#f87171}
+  body.dark .cb-unknown{background:#232c40;color:#94a3b8}
+  body.dark .cb-nr{background:#3a2a0d;color:#fbbf24}
+  body.dark .cb-lim{background:#16294a;color:#93c5fd}
+  body.mobile #cbInput{font-size:16px}
+  body.mobile .cb-item{gap:10px;padding:9px}
+  body.mobile .cb-thumb{width:76px;height:76px}
+
   /* ========== 通用按钮 ========== */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 18px;
     border:1px solid transparent;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;
@@ -464,6 +543,48 @@
     <div id="batchResult"><p class="empty-tip">尚未查询 · 输入设备编号后点击「批量查询设备」</p></div>
   </section>
 
+  <!-- ========== 云盒兼容性搜索 ========== -->
+  <section class="card" id="compatCard">
+    <div class="card-head">
+      <span class="card-ic ic-teal" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.2-4.2"/><path d="M8 10.5h5"/><path d="M10.5 8v5"/></svg>
+      </span>
+      <div>
+        <h2>云盒兼容性搜索</h2>
+        <p>输入打印机型号模糊搜索,查看云盒兼容结果和实拍图片</p>
+      </div>
+    </div>
+    <div class="cb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="cbInput" placeholder="输入型号或品牌模糊搜索,如 GP-3120、得力、LQ-615、TSC" autocomplete="off" spellcheck="false">
+      <button type="button" class="cb-clear" id="cbClear" aria-label="清空搜索" title="清空" hidden>×</button>
+    </div>
+    <div class="cb-quick" id="cbQuick"></div>
+    <div class="cb-bar">
+      <span id="cbStat" aria-live="polite">正在加载兼容数据…</span>
+      <a href="https://hzecool.yuque.com/ibfx5s/oxkphb/wytoyhy0fq56prq0?singleDoc#hoEk" target="_blank" rel="noopener" title="在语雀打开原始表格">数据来自语雀原表 ↗</a>
+    </div>
+    <details class="cb-tips">
+      <summary>选购建议 &amp; 字段说明</summary>
+      <div class="cb-tip-body">
+        <p>建议选择大品牌打印机,避免使用到贴牌机器。推荐品牌:佳博、Xprinter 芯烨、TSC 等。</p>
+        <p>便携式与品牌【新北洋 SNBC】【容大 RT】打印机都不建议连接,容易乱码。</p>
+        <p>云盒连接针式打印机,如果客户还没有购买打印机,推荐购买:映美、得力、得实、爱普生等。爱普生的假货比较多,低于 1000 块的大概率是假货,正品正常在 1300~1600 之间。</p>
+        <p>尽可能避开以下牌子:科密、新密、天威、格志、奥普、苍田、岳凰、映力、加普威、浙江维庭电气有限公司;它们的同型号不同批次会出现有的能用、有的不能用。</p>
+        <p><b>字段说明</b></p>
+        <ul>
+          <li><b>兼容</b>:打印机支持云盒,可以通过云盒连接使用。</li>
+          <li><b>不兼容</b>:明确不支持使用云盒连接打印机。</li>
+          <li><b>兼容性未知</b>:未收录过该型号,需要连接云盒后实际打印才能确认;部分贴牌机不建议使用。</li>
+          <li><b>不推荐</b>:可以打印但不稳定,容易出问题,支持功能不完整。</li>
+          <li><b>功能受限</b>:打印机的某些功能无法使用。</li>
+        </ul>
+        <p class="cb-tip-src">以上内容摘自语雀原表,仅供参考;实际兼容性以连接测试为准。</p>
+      </div>
+    </details>
+    <div class="cb-results" id="cbResults" hidden></div>
+  </section>
+
   <!-- ========== 命令执行响应结果 ========== -->
   <section class="card">
     <div class="card-head">
@@ -485,7 +606,7 @@
     <pre><code id="res" class="json language-json"></code></pre>
   </section>
 
-  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.7 · 美化版 · 本地运行   -by:小胡子</footer>
+  <footer class="foot" id="verFoot" title="点击查看版本更新记录">云打印命令模拟工具 v.2.8.8 · 美化版 · 本地运行   -by:小胡子</footer>
 </main>
 
 <div id="loading"><div class="loading-box"><span class="spin"></span>处理中…</div></div>
@@ -498,7 +619,7 @@
 	/* 深色模式:读取本机记忆,避免刷新后闪白 */
 	try { if (localStorage.getItem("YK_THEME") === "dark") document.body.classList.add("dark"); } catch (e) {}
 	/* 在线更新:当前版本号 + 源地址存储键 + 内置 GitHub 更新源(国内对 CDN 域名干扰时有波动,配置多个镜像依次尝试) */
-	var APP_VERSION = "2.8.7";
+	var APP_VERSION = "2.8.8";
 	/* 原地升级持久化:升级时新版会缓存到本机(localStorage);下次打开 / 刷新本文件时,若缓存版本比本文件新,
 	   在页面启动前直接用缓存整页替换——升级一次,刷新 / 重开浏览器 / 重启电脑都不回退,仍不用重新下载文件 */
 	(function hotRestore() {
@@ -525,6 +646,7 @@
 	var OPS_PASS = "slh2016";
 	/* 版本更新记录(点底部版本号查看;发新版时在这里补一行,最新的放最上面) */
 	var VER_HISTORY = [
+		["2.8.8", "1.新增「云盒兼容性查询」:输入型号模糊搜索,查看兼容结果与实拍图<br>2.内置 404 个型号数据(数据同步自语雀原表 2026-11-24)"],
 		["2.8.7", "1.取消扫码枪WiFi信息上次记忆功能<br>2.更换挂起按钮位置<br>3.支持挂起多个联网码"],
 		["2.8.6", "1.修复免下载更新问题"],
 		["2.8.5", "1.优化使用体验"],
@@ -3682,6 +3804,657 @@ PRINT
         };
         urlTa.focus();
     }
+</script>
+<script>
+const CB_DATA = [
+  ["Deili 得力","DL-720w（NEW）","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878305002-fbe43ea9-b441-4fdc-9c9b-1caf08b95747.png","",[]],
+  ["Xprinter芯烨","XP-58IIM","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878340739-53e54b83-100d-489a-acba-5aa6aa4f6760.png","",[]],
+  ["Gprinter佳博","GP-3120TUB","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878371237-1a3caf69-8036-48eb-bfa1-874279e0e9d9.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1781353869680-254c56c3-6752-4494-abb7-82bd66dfc710.png"]],
+  ["EPSON爱普生","LQ-615KII","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1771998406791-a7737e56-a6a3-48ae-956e-0b33dd16d2e8.png","避免购买到假货",[]],
+  ["优库YoKoscan","T320","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878547318-907a0d4c-95fe-4665-9846-b2416f464280.png","疑似贴牌机，兼容性未知。不建议使用",[]],
+  ["HP惠普","HP Laser MFP 136nw","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878778490-14ed1de0-dd8f-4458-b158-39862b0b7bb7.png","",[]],
+  ["Gprinter佳博","GP-9034T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756878849488-83c5edca-01a4-4f0d-a82f-5e6cea1bae9c.png","",[]],
+  ["Gprinter佳博","GP-58D","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756879701803-027cb50a-9f12-4fe9-b026-74089e32929a.png","要连接云盒实际确认",[]],
+  ["EPSON爱普生","LQ-630K","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756879933633-f98da720-c146-4b55-be33-00d80df345f2.png","",[]],
+  ["GoDEX科城","EZ730","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756879973912-d31efec1-a719-4005-9500-21c10a737856.png","",[]],
+  ["TSC","TTP-244Pro","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756880022426-b483b92d-7b5a-4451-9bc7-74934877fe16.png","",[]],
+  ["HP惠普","LaserJet 1020 Plus","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756880079093-bdba1b72-abaf-455e-838f-21035dae6fe8.png","",[]],
+  ["bsc","bsc-834","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756880275582-48e6d00b-7c2e-4008-985f-5018f0a1e4cf.png","",[]],
+  ["Gprinter佳博","GP-1834TC","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756880571464-a8328d82-c041-40bf-8f2e-31a2f71c3d2c.png","",[]],
+  ["SNBC新北洋","BTP-2200E Plus","否","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757999553963-c13a3f76-26a1-4680-98bf-4d8874c51269.png","",[]],
+  ["Gprinter佳博","S-C8812","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756884961842-43dd7d38-0ec4-48f5-bc73-142b9e4fb82b.png","",[]],
+  ["Gprinter佳博","GP-2124T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756884997579-9de7f550-5a69-4dae-a202-328ec5cbc91b.png","",[]],
+  ["Gprinter佳博","GP-58MBIII+","否","https://cdn.nlark.com/yuque/0/2025/png/39055795/1756885361532-8d3916a7-8198-4bda-98ff-8fae6525c668.png","发送数据线云盒就会重启",[]],
+  ["Gprinter佳博","KS-2170IV","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1792209908837-872ddc2d-f10c-4ffc-95fa-9a5b4381488c.png","发送数据线云盒就会重启",[]],
+  ["HP惠普","LaserJet Pro P1106","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772252013241-0eb69e35-0f7e-4532-8ae2-0f3d43de55c3.png","",[]],
+  ["TSC","T-4502E","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775523798602-0cde3b3f-89b4-4215-a2a3-c448c1216bec.png","严选设备",[]],
+  ["TSC","T-4503E","是","","严选设备",[]],
+  ["Xprinter芯烨","XP-TT429B","是","","严选设备",[]],
+  ["西铁城","CL-F306","是","","严选设备",[]],
+  ["西铁城","CL-F208","是","","严选设备",[]],
+  ["Jolimark映美","CLP-180W","是","","严选设备",[]],
+  ["Jolimark映美","HX-535k","是","","严选设备",[]],
+  ["快麦","KM-218","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1756962678586-9790fad0-25ad-48ba-8fa3-1b550e6ad1bd.png","",[]],
+  ["沃菲斯","POS-5890T","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1756975121087-163efba0-3b81-4845-9081-3ee5f722458b.png","",[]],
+  ["客如云","KRY-SPR8UE","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1756979124273-751f1f3a-949c-485d-a08e-877246a38758.png","",[]],
+  ["克鲁伯","CS60PRO","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757213257277-81d0115e-8fc0-498c-928c-a0c3c2ac992b.png","",[]],
+  ["Gprinter佳博","GP-7645III","兼容性未知","https://cdn.nlark.com/yuque/0/2025/jpeg/57169426/1757237017348-3817e180-16fa-47b2-b3f0-adebc4e70565.jpeg","撞击点阵式的就不大确定了，这个只能试试之前用的打印质量比较差",[]],
+  ["Gprinter佳博","GP-2270T","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757237459716-e5e0cc50-925c-4c5b-8e64-88972b6e7c25.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1780128150796-ad0a8e6c-7fd9-47c9-8079-70e03a6fd024.png"]],
+  ["HP惠普","DJ2877","兼容性未知","https://cdn.nlark.com/yuque/0/2025/jpeg/57169426/1757297530852-4a6cd487-4723-4e82-b40c-e8d4c8a7fec5.jpeg","",[]],
+  ["HS浩顺","HS-58901","兼容性未知","https://cdn.nlark.com/yuque/0/2025/jpeg/57169426/1757305090862-1af058ff-20ad-4952-983c-058f841a43ed.jpeg","",[]],
+  ["TSC","TTP-342E Pro","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757306185413-3a8b976b-62be-4813-bf67-a9c8ba12296e.png","",["https://cdn.nlark.com/yuque/0/2025/png/39055795/1767166727462-be8a5ab9-d775-414d-9ba9-20864e3376b4.png"]],
+  ["天威","PR730","是","https://cdn.nlark.com/yuque/0/2025/jpeg/57169426/1757469211345-fdf49383-f9f5-4045-9afe-45eb5728940f.jpeg","",[]],
+  ["HM","HM-T260LR","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757574513799-9f302b16-f4ba-411a-be48-cb6f97ce68de.png","",[]],
+  ["Gprinter佳博","GP-C200V","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757577867444-04d2af49-9403-46f3-a059-82e2a20d1d7f.png","",[]],
+  ["Gprinter佳博","GP-C80180II","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757650130249-942ac4c7-68cb-4fdd-9583-8bc8247379f1.png","",[]],
+  ["HP惠普","HP LasterJet P1108","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1757656596163-35847761-2d74-4d31-8675-883c758f4a8b.png","",[]],
+  ["Xprinter芯烨","XP-80T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757918629897-6cbef05e-ef84-4b13-ac56-382f884b31dd.png","原厂驱动打印小票多份会只出1份【改ESC/POS通用驱动(203dpi)】",[]],
+  ["秦丝","QS-N5","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757919864468-6c719de2-7876-49d5-ad6b-fc7a0196c948.png","",[]],
+  ["TagBoTs","A50pro","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757919925451-2db1557f-77e4-42f5-9fbc-3640a970055d.png","5V的，这种支持的概率都不是很高",[]],
+  ["Jolimark映美","BF1688","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757997337726-abb8c93e-31e5-4dcd-8931-04fb89f9abb4.png","",[]],
+  ["HP惠普","G3830","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1757997371569-074b6c2d-3fca-4b1f-902f-08b2407b01da.png","",[]],
+  ["驰腾","CT221B","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758004345586-2d56abb4-6f81-4197-bdb3-03a66c10811d.png","用ESC驱动打印",["https://cdn.nlark.com/yuque/0/2025/png/57169426/1761875210799-0e1f65b5-a0ef-45f0-ba32-0567443deb0d.png"]],
+  ["Xprinter芯烨","XP-365B","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787631900794-2b6ab6d4-caaa-4dda-b9cf-c658e4a5b589.png","",[]],
+  ["HPRT汉印","D35BT","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758012124825-3b70856e-d064-4866-b1e9-9be906e71a67.png","",[]],
+  ["Gprinter佳博","GP-1524T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758013680421-a110dd5d-61d2-42b1-a96a-1d5ea327b014.png","",[]],
+  ["实达","BP-3000XE","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758014060518-a019f7a5-c855-4306-9cb9-e91feec28331.png","",[]],
+  ["TSC","B-2404","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758015345020-14d5a9a4-c37a-4cc6-b7df-2966627bfd27.png","",[]],
+  ["HPRT汉印","D35","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758088099498-8dfb7491-aaa6-4da1-a071-17ac2a4e309d.png","",[]],
+  ["HP惠普","HP1106","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758099034877-e6ec1e44-2fdb-47d8-8147-29fb4d647e5e.png","",[]],
+  ["HP惠普","HP1108","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758099034877-e6ec1e44-2fdb-47d8-8147-29fb4d647e5e.png","",[]],
+  ["Gprinter佳博","iSH58","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758176981417-458806b6-3e82-4ee2-9954-98d6dff8786f.png","用ESC驱动打印",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1781353904105-1c1a207d-24f8-4e2c-a82f-7e05f8412630.png"]],
+  ["博思特","E300i","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758359787054-30581b03-438a-4e6f-aa73-c218fe165ab6.png","",[]],
+  ["Xprinter芯烨","XP-A160H","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1790577132918-567bf575-ef46-4fa1-9ea2-fff3528caf2a.png","",[]],
+  ["Gprinter佳博","GP-TD2270","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758604251127-72b4e7ee-f53e-4c4e-97a5-83b0ada35471.png","",[]],
+  ["GoDEX科城","G500-U","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758604292763-b5106a5f-a93f-417f-af40-c9cd51246bcc.png","",[]],
+  ["华购","HG-P011","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758606291611-0cbee51d-d3c5-4e07-9796-9555d43973ca.png","",[]],
+  ["TSC","TTP-243E Plus","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758606538764-2aece10a-3894-4c54-bd39-52d22218b04b.png","",[]],
+  ["ARGOX立象","CP-2140M","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1758689834232-cd9f1187-5dc3-47b6-b74c-8edad44d72b8.png","PPLB 标签机通用驱动 (203dpi)",[]],
+  ["Xprinter芯烨","XP-58IIhV","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758779287383-f5166854-139b-41ec-98db-b018d025ff71.png","",[]],
+  ["PUQU","AQ00","否","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758789237423-306df642-5073-4f09-af5b-4db63e8f1733.png","便携式不支持",[]],
+  ["HPRT汉印","HCS-2LB25C","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758792439886-38254c43-f9db-4e78-8e02-5d1fb2319147.png","",[]],
+  ["Xprinter芯烨","XP-80TS","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1758856428929-8124bcbc-16a8-4fb9-b540-0d13cc60b4c6.png","",[]],
+  ["CY","CY-XP588UHU","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1759045398088-bd67b65a-076d-4162-9136-8a681406f710.png","",[]],
+  ["Deili 得力","580","是","","",[]],
+  ["云E宝","MTM-T15","是","","",[]],
+  ["富士通","DPK750T","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1759127244839-604461c9-2f0d-47fe-a5b9-783aa3bd935e.png","",[]],
+  ["Xprinter芯烨","XP-Q200","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1759197007512-a8246e56-f4b1-4833-bcbe-71396b282750.png","",[]],
+  ["Deili 得力","DL-720C(NEW)","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1784875076551-06dc702b-e5dc-4bf1-96e1-3df4a67dc933.png","",[]],
+  ["Gprinter佳博","GP-9134T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759974882713-7c82182d-1329-42cc-ad7f-e0b3d935c1f9.png","",[]],
+  ["HPRT汉印","G42S","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759974871808-e3bee762-ebe6-4b42-be00-356a4117ea27.png","",[]],
+  ["HP惠普","DJ2875","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759976300061-91042c57-448f-4084-83a2-c50fd0f2a967.png","",[]],
+  ["RONGTA容大","RP410H","不推荐","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759977270959-89eb1618-17cf-4759-b87e-964a81b64bf3.png","找打印机厂家改模式，使用ESC/POS，云盒找“秋明”",[]],
+  ["Gprinter佳博","GP-L80180I","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759979523257-c04b5841-25ef-49c6-bbb9-66b2bfb65165.png","",[]],
+  ["DASCOM得实","DL-210","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1759993590240-64b3588d-0bed-4391-9204-ece1a661904c.png","",[]],
+  ["Xprinter芯烨","XP-C76IIH","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760064921696-f09b3206-3da7-4f70-9e73-690bcd23af21.png","",[]],
+  ["Xprinter芯烨","XP-76IIH","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1795490532450-7586dc51-2e02-4485-8477-9248363d6bfc.png","",[]],
+  ["Xprinter芯烨","XP-A160M","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778321450980-eddd34c2-d546-4a11-8aa0-2ed016161526.png","",[]],
+  ["Xprinter芯烨","XP-T58H","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760147828119-40c0333e-fff4-4e90-937d-e9216b06fb79.png","",[]],
+  ["佳能","CANON-TR4640","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760345439730-2180abb0-8fb6-4281-a42f-ed3b0bd6e85a.png","",[]],
+  ["启锐","QR888XBT","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1760596738086-38758f99-5c33-4955-b34b-e09cda360729.png","",[]],
+  ["启锐","AEQ918T8","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1760596823536-15fff6a1-04a2-448c-8039-fc2f02038e95.png","",[]],
+  ["Xprinter芯烨","XP-420B","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1760597229549-18750ae7-4a1f-4644-9e33-7fe133510575.png","",[]],
+  ["Gprinter佳博","GP-L80160l","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1760598556230-a5c13b02-bbe7-44d3-aab1-fd8bc26cdf7b.png","",[]],
+  ["ARGOX立象","CP-3140L","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1760598566276-c30affa7-93db-4622-861f-9da7d66b700c.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1774863251300-926b8143-ab50-431e-9096-ea286c11b626.png"]],
+  ["秦丝","KM-QS-Q7","否","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760667252046-093c7446-8e63-4a87-9d30-d751248c17e6.png","WIFI连接",[]],
+  ["EPSON爱普生","L363","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760767964076-b3ec6e97-a958-4312-8c95-1effa959e2ce.png","",[]],
+  ["快麦","KM-118M","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760938487252-b1877aaf-5f0d-4be3-a2b6-65d75426d5e0.png","",[]],
+  ["EPSON爱普生","L3153","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1760952238427-0e692cc9-0cdb-4a67-bccc-183554c29365.png","",[]],
+  ["HPRT汉印","D45BT","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787536283529-cb1a184f-1bff-4e47-8bc7-8f373ed95be3.png","",[]],
+  ["AY艾印","AY-D5810","否","https://cdn.nlark.com/yuque/0/2025/png/57169426/1761275740143-9c01f742-b750-46bc-910f-ecd750a3063c.png","云盒不兼容，具体表现为：发送打印数据，打印一点点，日志显示打印机内存太小。",[]],
+  ["爱宝","A-1180","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1761536014695-6ea25725-86b9-444f-8fe1-19750961e1e1.png","厂家说有客户之前使用过，需要具体测试下",[]],
+  ["EPSON爱普生","TM-T60","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1761615875178-47108ec7-4edc-4f96-be6c-7cffdc810c9a.png","",[]],
+  ["PANTUM","PT-L388","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1761615895479-55532716-aae6-4151-b1fd-c184f28f5e51.png","",[]],
+  ["多客","多客","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1761811083815-bcfa07ee-c2d4-4b90-8baa-92731343455b.png","",[]],
+  ["赛想","SX-K58E","是","","",[]],
+  ["爱宝","A-1198","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1761985142211-bca49035-14d8-4f72-af03-3483b35b8558.png","",[]],
+  ["RONGTA容大","RP58B","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1762396730965-c2b19df3-6cf9-40d7-94ff-4c0d9abae721.png","",[]],
+  ["Jolimark映美","C19A","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1762409370267-0e9d7a69-30d1-4f23-ba5d-5b52111be0e3.png","要连云盒具体测试",[]],
+  ["Gprinter佳博","GP-58MBII","否","","云盒不兼容，发送打印数据云盒就会重启",[]],
+  ["Gprinter佳博","GP-58MBIII","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1789634699305-652bfad7-9f43-4c3f-aa26-cde0f4979c3b.png","发送打印数据云盒就会重启或者掉线",[]],
+  ["Deili 得力","DL-5801P","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1780367695159-f4711f89-078d-4b3d-a833-b3a89a6747a2.png","",[]],
+  ["weirong维融","WR-H1","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1762491329731-777d75df-3101-4b8e-8116-ffca4fcd5b52.png","要连云盒具体测试",[]],
+  ["印麦","IP80","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1762491363650-2bacbde5-4a80-44e9-a393-5bb2d595a4ba.png","要连云盒具体测试",[]],
+  ["启锐","QR-368W","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1762510605458-5cf6a32b-f9b6-4341-b962-3208171279ce.png","",[]],
+  ["RONGTA容大","RP325","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/39055795/1762510669579-14e5bda7-5bb3-45a8-8806-b8050cbd4b80.png","容大机器兼容未知",[]],
+  ["HP惠普","HP Laser MFP 136WM","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1762829561804-3b529cc1-223c-4081-81d6-851b682ee665.png","",[]],
+  ["DASCOM得实","AR580P","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1784446527267-64f87e4d-c003-4a62-b0df-eb53aaa73178.png","",[]],
+  ["快麦","LP380BC","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1763349536123-f4eb3f6d-eb05-4b46-82b0-d0af06fb2e08.png","",[]],
+  ["Gprinter佳博","GP-9025T","是","https://cdn.nlark.com/yuque/0/2025/png/39055795/1763531742433-78e8b3e8-2c7d-42dd-b83f-5fcfac4dc93e.png","",[]],
+  ["Xprinter芯烨","XP-C230","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1763968971552-7425ff35-b060-4681-b579-21686996f3d8.png","",[]],
+  ["Gprinter佳博","GP-58130IVC","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1764056615079-d82ec335-932e-427b-8116-e80159af4d8e.png","",[]],
+  ["宸芯","N80B","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1764057637886-cfa8f080-d9d2-474b-9a7e-c6d0ed4e5faf.png","",[]],
+  ["Xprinter芯烨","XP-58IINT","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1764491920765-5f6c7f1f-2bd3-4e06-a829-f35d42c2e126.png","",[]],
+  ["Gprinter佳博","R220C+","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1764741251986-0ef88996-31fb-4178-bf7e-be4120124b97.png","",[]],
+  ["Gprinter佳博","GP-8300TC","是","","",[]],
+  ["CITIZEN","CL-S631II","兼容性未知","","",[]],
+  ["Gprinter佳博","GP-P3","否","https://cdn.nlark.com/yuque/0/2025/png/57169426/1765267302528-0aac8cd8-16cd-4441-b80e-13945a561afe.png","用ESC驱动打也有问题，打印不出纸",[]],
+  ["数衍","DD-RDLP324","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785142525277-31544187-f6ae-4a1c-82be-df77d5d613da.png","",[]],
+  ["Xprinter芯烨","XP-T451E","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785039477656-92dc4b60-c5d6-4b08-8721-99f994787f25.png","",[]],
+  ["HP惠普","HP LaserJet 1020","是","","",[]],
+  ["HP惠普","RX-300P","兼容性未知","https://cdn.nlark.com/yuque/0/2025/png/57169426/1766039592586-a9960435-29aa-4192-9ee6-e746a4b1fe5f.png","",[]],
+  ["HP惠普","HP LAser Jet PRO M17w","是","https://cdn.nlark.com/yuque/0/2025/png/57169426/1766733897138-ea3f1d4f-3fba-4b0f-bbbc-3fb8e23ae4b3.png","",[]],
+  ["多客","DK80A","否","","",[]],
+  ["启瑞","QR-586B","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1793348307114-471843a8-90e8-4ad1-9494-a96fe1bdc167.png","",[]],
+  ["秦丝","KM-QS-Q6S","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1777430906064-47a4889c-4212-4cd1-867f-ee4c633146b6.png","打印很浓,无法设置浓度",[]],
+  ["Gprinter佳博","GP-2120TF","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1767836554035-3f7591b3-0d38-43e1-ba2d-a38eea876b87.png","",[]],
+  ["ARGOX立象","CP-2140EX PPLB","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1768361345357-fbd27b53-7839-4366-84fb-12806460d0dc.png","",[]],
+  ["爱宝","A-587S","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1768444497831-ef806170-7e2d-42ed-a09b-afae16db27a0.png","",[]],
+  ["海鼎","未注明型号","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1768550270655-34a4c5c3-44a5-41ba-be41-fe02fce8abe1.png","",["https://cdn.nlark.com/yuque/0/2026/png/57169426/1779333727293-726a7f2e-cd57-41e0-88e2-31204fd01e51.png"]],
+  ["Gprinter佳博","1134T","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785803102369-828c2f1d-d41b-4dd0-b0ef-e5a431d46989.png","",[]],
+  ["商米","NT211","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1769070631972-d3e93c11-5d32-4d6b-9b2c-9952bf1d5ac4.png","需要具体跑诊断测试",[]],
+  ["佳能","iC MF643Cdw","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772002746578-80909dd3-a3f9-481e-85ec-942a59c4902e.png","",[]],
+  ["富士通","DPK750 pro","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1769152374405-3932e122-be55-444a-936a-707f5cc07209.png","",[]],
+  ["HPRT汉印","FT200","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1769487977347-cb1b90aa-5134-4aff-8bb3-fdbe3d2a2a68.png","",[]],
+  ["秦丝","QS-C85","不推荐","https://cdn.nlark.com/yuque/0/2026/png/57169426/1769930008685-be48778f-8325-4e5b-a733-0fc5004b7c53.png","得用ESC2驱动，并且无法标定，会自动切纸",[]],
+  ["Gprinter佳博","58MBIII+","否","","不支持",[]],
+  ["Gprinter佳博","58MBIII","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783318698208-1516ff9c-5526-4aaf-800b-74ef4d6f272c.png","发送打印数据云盒就会重启或者掉线",[]],
+  ["Gprinter佳博","GP-D321","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1770188814199-07c19546-0681-45e5-8d87-8544aa3f1f4d.png","",[]],
+  ["Gprinter佳博","GP-2120TU","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1770193332718-38cf17de-3b51-4dcf-b7f9-f35ef5951930.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1781353850079-d3e125d9-0ee5-4deb-b985-9c079c1569dc.png"]],
+  ["Gprinter佳博","KS-7645III","否","https://cdn.nlark.com/yuque/0/2026/png/39055795/1770362451145-3cfc8e11-caca-4aa6-acf2-9a9b54d0b6e6.png","但撞击点阵式打印机效果差，",[]],
+  ["爱宝","A-5879","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1770362709911-d512351b-b1a1-42f8-9227-ac449f628f89.png","",[]],
+  ["SPRT思普瑞特","SP-POS88VU","是","https://cdn.nlark.com/yuque/0/2026/jpeg/28362692/1771998261233-f33edb19-8604-4773-8d02-f78185656d60.jpeg","",[]],
+  ["SPRT思普瑞特","SP-TL54U","是","","",[]],
+  ["SPRT思普瑞特","SP-TL54云","是","","",[]],
+  ["SPRT思普瑞特","YK-TL58","是","","",[]],
+  ["SPRT思普瑞特","YK-58R云","是","","",[]],
+  ["SPRT思普瑞特","L36","不推荐","","可能会出现乱码问题,不建议使用",[]],
+  ["SPRT思普瑞特","SP-L53i","不推荐","","可能会出现乱码问题,不建议使用",[]],
+  ["Xprinter芯烨","YK-58R","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772005609824-930ab070-dd57-4310-bb4f-ae8ff231d49b.png","只支持打印小票使用SPRT驱动;标签跳纸",[]],
+  ["SPRT思普瑞特","SP-POS888","是","","",[]],
+  ["SPRT思普瑞特","SP-POS890","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772005650826-5dcfc70d-b612-42a2-8684-a12fe018154d.png","",[]],
+  ["秦丝","KM-QS-Q5","不推荐|功能受限","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772071349567-bda724d2-5158-4b6d-800b-96eecec0c965.png","可以打印标签和小票，40*30，使用过小的标签纸，打印跳纸 / 部分：存在点打印云盒重启的情况",[]],
+  ["SNBC新北洋","BTP-L540H","不推荐","","需要使用打印机的设置工具设置完,才能连云盒",[]],
+  ["SNBC新北洋","BTP-L520","不推荐","","需要使用打印机的设置工具设置完,才能连云盒",[]],
+  ["SNBC新北洋","BP430","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772003784861-b317e785-8e67-4fc1-a2ae-9eefbb7ecf69.png","",[]],
+  ["驰腾","CT221D","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783483986447-8da7f3b5-96ac-414c-b9cc-5f25bd1f305b.png","数据线是Type-C",[]],
+  ["EPSON爱普生","L3256","是","","",[]],
+  ["SPRT思普瑞特","SP-POS58IVU","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772004938211-4497d95d-a596-45b0-9825-72a5c18455ae.png","",[]],
+  ["秦丝","QS-C82","兼容性未知","","",[]],
+  ["Gprinter佳博","GP5860III","兼容性未知","","",[]],
+  ["Xprinter芯烨","XP-T80B","是","","",[]],
+  ["Xprinter芯烨","XP-C160H","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772156297345-5a68a5ec-cca2-4acd-989d-1d370d6b23ca.png","",[]],
+  ["NIIMBOT精臣","K3","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772157982281-f4ba5c91-02d3-4b2e-a000-8ccebf06af10.png","",[]],
+  ["EPSON爱普生","LQ-520K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772164019474-a1a980f7-88d8-4e32-aa3d-d517a921664e.png","",[]],
+  ["HP惠普","HP DeskJet 2723","是","","",[]],
+  ["PANTUM","P2518NW","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772182844878-3229929f-32ed-4a20-ab3f-dc1f9df5754e.png","",[]],
+  ["秦丝","KM-QS-R5","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772188318830-5649e1dc-b44e-4217-8c7a-8d447caec830.png","",[]],
+  ["佳博","s3322","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1772260988457-bc022932-1534-44a9-8431-e9f88272e41a.png","",[]],
+  ["芯烨","XP-58IIH","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1772261000446-7601a6d2-4f0c-472b-9133-658fc526a724.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1781353886202-d379ceff-6ffc-46d6-9b6e-d4dbd3d5919a.png"]],
+  ["Xprinter芯烨","XP-N160II","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772351640410-2fffb9af-da00-480c-a73a-9fdc70240bca.png","",[]],
+  ["加普威","TH850","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772351665047-8996f861-70cd-4ee9-aa2d-caa8e8afe2e8.png","",[]],
+  ["小米","Mi All-in-One Inkjet Printer","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772425889994-b0c1f165-977f-4d8f-b393-037dd7bdb7f6.png","",[]],
+  ["多客","GM-X-110","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772446755899-6220d4f0-5dea-48ce-bf4e-77c24cdb6b37.png","",[]],
+  ["云e宝","KM-118DX","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1782973326003-bc9786a2-36f7-4cc0-8a6e-dd49857e008d.png","",[]],
+  ["TSC","G310","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772446975110-4ebe892c-7448-44ad-9d28-2d8fa9c9482b.png","",[]],
+  ["Xprinter芯烨","XP-N260H","是","","",[]],
+  ["HPRT汉印","N31BT","是|功能受限","https://cdn.nlark.com/yuque/0/2026/png/39055795/1772526442613-cda5738b-5c95-462b-a88c-467f1425b0be.png","不支持快递单",[]],
+  ["DASCOM得实","DS980","是","","",[]],
+  ["DASCOM得实","DS900","是","","",[]],
+  ["DASCOM得实","DS940","是","","",[]],
+  ["启瑞","488BT","是","","",[]],
+  ["NIIMBOT精臣","B21","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772676088702-aa1fd691-35e5-4230-9bca-6b43271d833a.png","",[]],
+  ["NIIMBOT精臣","B1","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773558976061-f0028cdf-85a0-4e5d-96fe-ebf8e1f76618.png","",[]],
+  ["爱宝","BC-80156T","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772683847639-02dae9d4-d21f-4f07-8d70-399aafdf4bea.png","",[]],
+  ["NIIMBOT精臣","M2_H","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772701971444-a5115283-3d61-4a52-b6ab-6e935455b609.png","",[]],
+  ["DASCOM得实","DS-1900","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772785181336-8c99a15a-fc99-4d3e-b25f-999d36f23870.png","",[]],
+  ["HPRT汉印","HM2BT","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772943303840-5f253af8-c284-4926-b0c7-5f21327301af.png","",[]],
+  ["Jolimark映美","CLP-180B","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1772943829740-34a221d3-af1e-46a7-99ef-d1b6b1ca6cb7.png","",[]],
+  ["Jolimark映美","LQ-200KIII","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773024563408-0ed6a790-d78a-4a5d-909c-67eaa3f4d3df.png","",[]],
+  ["HPRT汉印","XP-DT108B","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773281614161-df85f295-0cd1-428f-a921-483f83083348.png","",[]],
+  ["印麦","IP-802","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773281691928-844519cc-4b17-428b-9dc6-0df4b5f90783.png","",[]],
+  ["HPRT汉印","N31C","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773281728867-24176abf-e114-4355-aef8-4b73cb838527.png","",[]],
+  ["LEDEN","LG-920","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773281802732-3b553fcc-9fee-4aba-b179-fc932fbc89b3.png","",[]],
+  ["HP惠普","Laser Jet Pro MFP M126a","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773282222116-cb75217d-fb5e-46cd-8d15-5caecd4ae303.png","",[]],
+  ["Gprinter佳博","GP3120TL","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1773300258889-a67e0b21-6b4d-450b-9c0f-73b0f751111c.png","",[]],
+  ["日进斗金","HG-P012","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773306520859-2e4bd0d5-a55e-4799-8ffb-263498339ef0.png","",[]],
+  ["美恒通","MHT-L58G","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773313642394-c248de3d-b69a-4296-a386-1923f7b50c8e.png","",[]],
+  ["POSTEK","C168/200S","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773368629748-05408d1b-3787-439d-9f66-d8605bf528ca.png","",[]],
+  ["ZEBRA","ZD421CN","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773368949514-b969ba17-93ac-4b4d-ad38-218bcc244201.png","",[]],
+  ["DASCOM得实","TL-244","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773374320875-c46e4239-816e-4c81-a743-518de618041c.png","",[]],
+  ["Gprinter佳博","GP-C80180IIN","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773558752226-ee3aa057-1f52-4216-8a45-9331413fd6eb.png","",[]],
+  ["Gprinter佳博","GP-R320C","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773558800553-b9acb563-5199-4bb1-bc70-a44ed3f6365b.png","",[]],
+  ["RONGTA容大","RP410N","不推荐","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773626237726-91320c5c-d742-48ce-9144-144d5d78d692.png","如果有格式问题，需要接主机修改格式;这款打印机的兼容性不是很好",[]],
+  ["Gprinter佳博","GP-C881","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/39055795/1773639604812-84363724-d7e7-470d-9135-ebfd8750453b.png","",[]],
+  ["惠普","SNPRC-2201-01","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1773639721148-2d7dd951-e3a0-400e-a61b-1288bc053f2f.png","",[]],
+  ["CANON佳能","G3810","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1773642460692-72353ee2-f7bd-4899-8214-51b599cce924.png","",[]],
+  ["Xprinter芯烨","XP-TT426B","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1773712601261-c37f87ce-c18e-4906-ac99-7efef8e98ac9.png","",[]],
+  ["PANTUM","P2206W","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1774147374270-d09558c3-8bce-4df6-b278-092e83fbb046.png","",[]],
+  ["数衍","DD-DP214","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1774147431664-144d3e51-e889-44f1-aa1e-b8a47a33d504.png","",[]],
+  ["TSC","LP6820T","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1774254867811-4bb9eeb2-53d6-4d35-9bd8-bf75f79f70ab.png","",[]],
+  ["TSC","TE344","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1774513520055-a3acb36c-c924-4a5a-bd32-178aed3f3c72.png","标签打印闪红灯，模纸张类型选择“黑标”",[]],
+  ["Gprinter佳博","A2","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1774598701235-d8e95d57-e12f-4fb7-8c19-14e4a53b75a4.png","",[]],
+  ["Argox 立象","CP-3140L PPLB","是","https://cdn.nlark.com/yuque/0/2026/png/55491690/1774750557840-a53b3060-4753-4e34-b5dc-c2e8e9496157.png","",[]],
+  ["EPSON爱普生","TM-T82II","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1774838366812-66d1aa6b-a02e-4963-9496-a40ec81410a3.png","",[]],
+  ["Gprinter佳博","GP-1124T","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775091640151-59502f1f-8ccc-484d-aaaa-22d3a8adabb1.png","",[]],
+  ["iDPRT","E430B","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1775616440624-40f34027-a9d4-4360-a85b-086bbed592f2.png","",[]],
+  ["Gprinter佳博","GP-D801","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1775630158862-2395b8f7-277b-4118-a77b-c5d5008a08b8.png","",[]],
+  ["Gprinter佳博","GP-58L","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775699614729-bf024376-66cd-44d3-8460-ab51077bde8b.png","",[]],
+  ["联想","M7400pro","是","","",[]],
+  ["浩顺","HS-58904","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775699996464-9f39f944-01d4-44ca-8081-c53fa76ea603.png","",[]],
+  ["FABULOUS","F-SP01","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775700041084-ce3c3e6b-614c-402e-9f5c-9492e39f882e.png","",[]],
+  ["EPSON爱普生","M375C","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775700101738-3872e570-8eb7-4736-a1b8-6bb835d8cb0c.png","",[]],
+  ["驰腾","X1Pro","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1775785739000-fa5ce268-23d6-4150-9d49-008b8c0ebd43.png","云盒列表上写着是兼容的，但是这个驰腾的接云盒打印会没有反应，反馈为网络失败，需要联系厂家看下",[]],
+  ["Godex科城","EZ-1105","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776074543695-a5d6e6c8-5415-4eba-bf1f-a3ee0152ce39.png","",[]],
+  ["Aisino","SK-800II","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776158568365-937257c5-09a0-41ca-9f85-2a4781f31f74.png","",[]],
+  ["纽赛","DL-Q5","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776161838811-985d2c6b-30b3-4f9e-a0b5-4da3c12b713a.png","",[]],
+  ["TSC","T-443 PLUS","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776649479340-dfb9817a-6dae-462e-b701-4d3c7f60a645.png","",[]],
+  ["博思得","C2180","是","","",[]],
+  ["wizarMAll","WizarMALL P1","不推荐","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776765431424-dc446182-9c90-4e77-b680-a5810243aebd.png","",[]],
+  ["FABULOUS","F-LP4306","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1776931836848-9591d91a-62e3-4ba5-bfec-7f68cb68bed6.png","",[]],
+  ["惠普","smart tank 585","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1777443387259-db822784-1f42-4a3e-929d-81dfe73e7b50.png","",[]],
+  ["衣帮手","YBS-LY-110","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1777443431878-d30f49c4-b167-463d-8829-b1b198a5d961.png","打印机得切换打印类型，打印小票已知是可以的，标签切换方式得询问厂家",[]],
+  ["衣帮手","XY-559","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1777443486645-79228cc9-4c0d-4f7f-aed0-8de01fe8ba63.png","",[]],
+  ["秦丝","QS-R110S","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794982456639-cbfa879e-4527-489f-b5d1-0b0faacbd71d.png","",[]],
+  ["佳能","Q3810","是","","",[]],
+  ["佳能","SNPRC-2150","是","","",[]],
+  ["中盈","NX-650KII","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1777443775263-37fc17f1-225c-4af9-8422-b1d5c4986911.png","",[]],
+  ["启瑞","QR488bt","是","","",[]],
+  ["TSC","TSC-G310","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1777443970300-c51bfcde-8bf9-4495-b378-3d5ee6f12872.png","",[]],
+  ["Gprinter佳博","GP-1324D","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1779428724043-cbb3d94a-73e4-40ad-819e-6c58b756e35b.png","小票标签两用打印机，打印小票会出很多纸，要加上纸张类型",[]],
+  ["Gprinter佳博","GP-3120TUC","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1777608315380-51329160-ab92-4c75-8f1c-3e88d8d9f87f.png","",[]],
+  ["Gprinter佳博","GP-R224C","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1777608329805-aae6129e-9252-4676-ae82-c017b77d7df0.png","",[]],
+  ["Deili 得力","DE-620K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1777974186478-5b3ecf31-8ca6-4c54-a600-fb19f18c8d18.png","",[]],
+  ["Gprinter佳博","GP-3120TU","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778222319583-7f13f736-2c70-4056-8c89-8aed60b7369c.png","",[]],
+  ["汉印","T260","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778314736771-49a308f9-e84d-4c74-8b0a-2427cf7093e3.png","",[]],
+  ["昇界","SJ-P3-A","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778316162974-9d189c85-48e2-4033-ac8d-3d4bd1d65954.png","",[]],
+  ["Deili 得力","GE500W","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778321280649-c23a7ce5-991b-483a-b5eb-20922710d1f7.png","",[]],
+  ["Xprinter芯烨","XP-58IIT","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1778909714523-52e37236-e4e9-447b-80ff-6b57b34b23c5.png","",[]],
+  ["得力","DL-581YW","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1778921074079-589431a2-d33e-4c42-8fe0-437cc2463ba6.png","",[]],
+  ["Epson 爱普生","LQ 595KII","是","","",[]],
+  ["中盈","NX-500F","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1778985442742-ec56b8f6-fb4c-4aea-bcee-49bd9a3251a8.png","",[]],
+  ["FUJIxerox","M115w","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1778985479461-ec5f3935-1d72-497c-9a41-0ddbf0763da2.png","",[]],
+  ["启锐标签","QR-888W","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/39055795/1778999433275-e0b0e292-6a82-4eca-98af-ba893fb495c9.png","需要试试，相邻的应该都支持的",[]],
+  ["科诚","G530","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1779000314440-a0fbed5d-b87a-44f7-8e56-6b9c67475dc3.png","",[]],
+  ["GoDEX","EZ230","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1779162253563-d091d04d-7a75-43d0-af8c-f05530982b9e.png","可以用ZPL的驱动试试",[]],
+  ["映美","BF-1688W","是","","",[]],
+  ["HP","HP Color LaserMFp 178nw","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1779436788380-81b28635-3a33-4281-9202-d2ef9c149990.png","",[]],
+  ["富士通","DPK750T Pro","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1779766634167-4bada759-51d1-48ea-ba42-7cc742b0c07c.png","",[]],
+  ["东芝","TECB-462-TS22","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1779781597881-6c0f52b9-dd8c-40ac-9ded-4d8fac903d29.png","",[]],
+  ["佳能","佳能MF230","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1779781675520-1ccf6ad2-4dd4-49ce-9e5a-0194dca0746e.png","",[]],
+  ["c","LQ-635kII","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1779781730075-ac38758c-0fdc-4cc8-80f9-e848e902f87a.png","",[]],
+  ["佳博","GP-2134T","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1779872548942-726899e4-49da-46ae-b9e8-89b35fd68c1f.png","",[]],
+  ["SNBC新北洋","BTP-L42","不推荐","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780038933681-79cea983-32a8-4549-9ecc-6f9aaac8b79f.png","云盒列表上写着是兼容的,新北洋处理很麻烦",[]],
+  ["RONGTA容大","RP212","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780041892276-c1938e52-1710-4b0a-986f-3bd3c4e2b269.png","",[]],
+  ["TSC","TTP-27","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780049111100-4d354b4f-f5ae-46fa-a736-677368f7d0d0.png","",[]],
+  ["佳博","GP-7635III","不推荐","https://cdn.nlark.com/yuque/0/2026/png/39055795/1780367742518-aa5091d7-77f4-45ed-8b24-4185d7342d1a.png","",[]],
+  ["得力","DL-581PW","是","","",[]],
+  ["SNBC新北洋","BTP-220E","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780379413119-af703b38-ff05-415c-a0eb-aebd8c198f95.png","",[]],
+  ["小米","小米k200","是","https://cdn.nlark.com/yuque/0/2026/jpeg/22768632/1780470411413-50936204-7acb-49ab-ad69-7fd17615cac8.jpeg","",[]],
+  ["佳博","C881","兼容性未知","","用ESC驱动,大概率可以",[]],
+  ["疆马","SU8升级版","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780581315141-31d9bfc8-b252-4ed4-8d96-e975e16aaaa9.png","",[]],
+  ["惠普HP","HP DESKJET INK ADVANtage 2775","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1780721605538-95629a26-80ea-4587-81c1-dada5554eff9.png","",[]],
+  ["思普瑞特SPRT","SP-TL28UNTMM","是","","",[]],
+  ["OKI","MICROLINE 5500F","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1780998542642-9d0de6a9-01ac-4152-ab79-cde58f5b85a5.png","",[]],
+  ["得力DeiLi","DL-610KII","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1781159899860-c6156622-918d-44ae-8204-0483a08fdf42.png","",[]],
+  ["快麦","KM-116","不推荐|功能受限","https://cdn.nlark.com/yuque/0/2026/png/57169426/1781404194942-dbdd2831-ac38-434b-a532-97956c0a7710.png","TSPL不出纸，ESC可以出纸，打印不完整，无法显示全，需要联系厂家调试，使用原生驱动",[]],
+  ["惠普","HP DESKJET2332","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1781511458343-90f1f917-85cf-4c3e-8d57-68ce8923356c.png","",[]],
+  ["爱普生epson","LQ-635k","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1781679543530-f29828a6-f53d-439e-a54d-1a37f3325878.png","",[]],
+  ["tsc","G210","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1781682890319-adb42f38-bec8-4db5-ac50-eace854050a4.png","",[]],
+  ["Deili 得力","GE350","是","","",[]],
+  ["惠普","2823","不推荐","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782284962146-18188ee8-5ab1-4390-a9f2-966d7da7afe9.png","这种墨盒机不建议商用，能用，但是墨盒没打几张就没了",[]],
+  ["得实","DS-1920","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782285019686-dfc25519-174a-4bd9-9425-8981e3dd1912.png","",[]],
+  ["中崎","中崎桌面机","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1782355185955-a4a86619-3019-4260-a11c-f248ff3e896e.png","",[]],
+  ["中崎","AB-80K","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783484573843-971100dc-93ca-43c8-a6f2-4dc4849d4570.png","",[]],
+  ["TSC","T-210E","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782527080182-bbbf57fa-ffba-4208-812c-e662a79bb300.png","",[]],
+  ["爱宝","A-5870","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782725530575-76ab62a9-5ab3-4df9-87ca-1b74df7f23ca.png","ESC指令支持的",[]],
+  ["富士通","DPK300","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782806640851-4ff6d2f0-e758-4623-9bf1-8995e5145bf7.png","",[]],
+  ["汉印","N41BT","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1782888670126-7758765a-8bf0-4546-ae7d-d130bc171fa3.png","",[]],
+  ["佳博","GP-D221","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782960044062-37a316d7-1114-47db-9fb0-a8a48fe30501.png","",[]],
+  ["逊镭","XL-58BL","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/39055795/1782960248843-84b36c39-dcf9-46f1-8122-ed590b9c7dc4.png","",[]],
+  ["佳博","GP-C802","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1783135324581-71fab0b2-eaaf-4d19-9633-19504812dd46.png","",[]],
+  ["爱宝","A-5890","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783144619924-44e75014-0450-42ff-9987-3593abf31d3e.png","",[]],
+  ["得力","GE430","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783144844093-7cd1c977-8704-4a31-a51d-892615b5ce8b.png","",[]],
+  ["惠普","LaserJet Pro 4202dw","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783144890265-51f7210b-61e6-4525-9299-90cc84d43ede.png","",["https://cdn.nlark.com/yuque/0/2026/png/28362692/1783144902618-06c822e2-0fab-41ed-8524-c47e8ac33aa2.png"]],
+  ["得力","DL-820T(NEW)","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1783407219135-215b1e78-34a5-40fb-a75d-557d9e429bd5.png","",[]],
+  ["打印魔方","JST-06","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783484511138-30e3ae1f-ce82-4df3-b206-47e2356074e6.png","",[]],
+  ["TSC","T-4506","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1783484630775-4fcf79cd-3a66-4981-a947-939f6fd9edd7.png","",[]],
+  ["惠普","HP LaserJet M233sdw","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1783495360768-e74323cd-c205-4b1a-b7ea-74102866d556.png","",[]],
+  ["施乐","Xerox WorkCentre 7835 i","否","https://cdn.nlark.com/yuque/0/2026/png/57169426/1783823242019-f0bce4f6-786f-429a-be67-cab3a6f2ce64.png","",[]],
+  ["三星","Samsung SCX-4623FW","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1784193036175-ab83ff19-9783-4244-bbcb-b5ad8e5fef74.png","",[]],
+  ["DCP","DCP-L2548DW","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1784276897281-046818c0-12d0-4b45-86a7-c61b1d0f9c94.png","",[]],
+  ["译维Ezscan","E750","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1784370157942-ea830913-2241-4f38-bd11-9c62423468a7.png","",[]],
+  ["科城","G530U","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1784448648790-77088a38-9411-4d9a-a031-7edd5e5ce236.png","",[]],
+  ["汉印","HM-A300E","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1784517068959-d785f5f2-6195-4c36-8b73-83fea6c06302.png","便携机",[]],
+  ["思普瑞特","SP-TL24UBTDM","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1784534545460-503aa4c6-b116-4c68-9109-04738f872c06.png","",[]],
+  ["佳博","GP-1824TC","是","","",[]],
+  ["富士施乐","M811W","是","","",[]],
+  ["佳博","GP-C200I","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1784895783742-86d2eda3-bfd0-4aba-9b73-177ce5ac49af.png","",[]],
+  ["岳凰","AK-950","否","https://cdn.nlark.com/yuque/0/2026/png/57169426/1785121595138-c7535fc3-bbab-4702-805c-48eba25e22ab.png","这个牌子的打印机基本上兼容性很差，不兼容连接云盒",[]],
+  ["EPSON","L3119","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1785214871129-b7c4a027-355a-4c7e-9966-2a0911c98920.png","",[]],
+  ["惠普","未注明型号","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1785214902272-5d8e3865-194a-44de-b532-c9a7e6c4b642.png","",[]],
+  ["爱普生","AR-615K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785232626935-31392615-6e26-4d5d-86f2-c05245f4cb15.png","",[]],
+  ["brother","DCP-B7520DW","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785310246118-5646558d-e41d-4562-a1fe-03ca6b8d3c01.png","",[]],
+  ["实达","BP-3000II","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1785811023984-9d1bd5b4-376a-4925-9957-32614e2461ba.png","只能通过通用24针式驱动接云盒，打印机这边接云盒会匹配到OKI 针打通用驱动，打印机会滴滴滴叫",[]],
+  ["汉印","P50","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1785916551772-bacd36aa-706a-49a3-84a5-9303dd8e351c.png","",[]],
+  ["加普威","JPW860","否","","不支持没反应",[]],
+  ["Argox 立象","ME-3140(AII)","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1785921853347-f8ba6653-077b-4375-a204-30491c40a741.png","",[]],
+  ["惠普HP","LaserJet 1010","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786093084069-589ad75d-7414-413c-8925-4f550426d3d3.png","",[]],
+  ["得力","L532Ws","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786158823440-06f47a42-6b8a-47e7-a8ad-b784ecda5124.png","",[]],
+  ["映美","FP-630K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786246813375-98096d16-4531-4211-9e04-8d3bbc410ca5.png","",[]],
+  ["TSC","MF3410","是","","",[]],
+  ["芯烨","XP-76IIN","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786588096255-74e8b7d1-15e1-4b2b-9640-d63742c97782.png","",[]],
+  ["Argox 立象","OS-214plus","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786588162658-7c1df4fa-dfd0-4477-95d4-de31f64f688a.png","",[]],
+  ["EPSON爱普生","L383","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1786600931622-a8f0a13f-a233-4bb0-8a32-61598c1c79ac.png","",[]],
+  ["佳博","GP-L80160II","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786680624129-6b3d4a00-80c7-42e8-b255-fe47118626c8.png","",[]],
+  ["惠普","4925","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786676449218-fa56c0c7-2acf-4c6c-833c-3489ac22b4fb.png","",[]],
+  ["TOSHIBA","B-462-TS22-CN-R","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786677984302-b04c8316-9337-4839-91ca-1b3677a49cbe.png","",[]],
+  ["EPSON爱普生","LQ-680KII","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786680307175-938627d0-8a19-4981-b8b8-71a049763e8d.png","",[]],
+  ["容大","RP310","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1786940172654-2d8fa538-b674-4f8b-9964-5f3cff071656.png","",[]],
+  ["艾印","AY-D5811","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787034158891-46c4c93c-22c4-4ece-b290-b0d933f9dc97.png","",[]],
+  ["零墨云","A4mini","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787034059298-76851392-3a91-4eec-a59c-d36d88b0d92e.png","",[]],
+  ["佳博","GP-8812","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787106805019-fc097391-e3ba-42b7-bb5c-ac0622eede62.png","",[]],
+  ["TSC","MA3400P","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787106777615-a3f44396-1a6d-41c4-9dd0-c2f071abeeb9.png","",[]],
+  ["惠普","LaserJet Pro MFP M30w","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787279634298-a19045b8-1e47-4fb4-b639-3f5bf8eba3c8.png","",[]],
+  ["日进斗金","HG-P001","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787284573651-dec471d6-24bc-4f25-bd53-1c01ee0feea9.png","可以试下，ESC/POS 指令是支持",[]],
+  ["得力","GE530T","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787535858642-26571666-e2ac-44c3-9d48-3010ff2155cc.png","",[]],
+  ["HP","HP Smart Tank 599","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1787472164842-434b14fc-74fb-4555-b967-400406fb4196.png","",[]],
+  ["汉印","N31D","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787805204697-25d0f3b4-8e6d-4268-bad7-e4dbb3b7e2aa.png","",[]],
+  ["iDPRT","FT888","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1787899153713-783ae80d-c61a-47fb-b24a-de49163b054f.png","",[]],
+  ["iDPRT","sprt-y33q","兼容性未知","","",[]],
+  ["得力","DE-600K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1788149260135-19ec3602-df16-4439-9318-26cb5fe0471f.png","",[]],
+  ["佳博","GP-3100TU","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1788354441342-38d0f379-c1bd-489f-a806-d81b2167d41a.png","",[]],
+  ["Gprinter佳博","S-5121A","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1788354482737-010a6541-aec3-4bfc-8839-826ded0edbd3.png","",[]],
+  ["博思得","G-2108","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1788489915616-2d816b22-b032-411e-9982-daa72f0d4b54.png","并口数据线,厂家改驱动",[]],
+  ["日进斗金","HG-P004","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1788749057220-0d29e940-5d8a-49c5-8e32-1f988e7557e7.png","指令写的是支持的,需要实际使用下才知道",[]],
+  ["佳博","GP-2120D","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1789185483852-07393edf-483c-4708-a0e4-d1f3d4a90b83.png","使用TSPL",[]],
+  ["惠普","Laser MFP 1188nw","是","","",[]],
+  ["芯烨","XP-T202UA","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1789203355898-7e5b96fa-8291-4043-adde-c0590cccc76f.png","",[]],
+  ["得力","DL-888B","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1789541002994-f5f5430a-2ec9-4885-80be-4c3dc49e3cfc.png","",[]],
+  ["Nantian","PR2 plus","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1789787826646-7592f00c-6c19-4273-8997-15394b2b18a7.png","",[]],
+  ["惠普HP","SNPRC-1901-01","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1789881532118-0fe84faf-1b8e-45d8-8275-a85ad6e2165e.png","",[]],
+  ["佳博","gp801 ce","是","","",[]],
+  ["得力deli","DB-615kII","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1789996350749-edde144e-43bf-4bf9-94bd-a3a384900b75.png","",[]],
+  ["惠普","HP DeskJet 2132","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1790039406959-9f7ad8f3-b65c-4de4-9281-1b6677230074.png","",[]],
+  ["芯烨","T461E","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794824640732-e7935e95-e86e-4825-8ae3-d545895e943a.png","",[]],
+  ["得力","GE550TW","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1790144728879-f50f49cf-a59f-468e-9ddf-54c382bf8c94.png","",[]],
+  ["高威","GS-58A","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1790238291820-57cd0d23-e6b7-4c13-bc6c-19e3525b2e57.png","",[]],
+  ["芯烨","XP-360B","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1790238321703-49bc5f79-50a9-45ef-b24c-20a37f6d072b.png","",[]],
+  ["芯烨","XP-58IIHT","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1790575402773-e0cb9f7f-d5a0-4d7c-af44-7d73aecec0fa.png","",[]],
+  ["wizarMALL","wizarMALL P1PLus","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/39055795/1790577920596-1d61d8b1-ba0f-4951-8992-cf74042843e0.png","",[]],
+  ["浩顺","58903","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/39055795/1790589653881-ba2983a7-2a7c-450a-9f49-257e03de8ec8.png","esc支持，没收录过",[]],
+  ["得实","TL-244pro","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1790660698559-38f1ead4-bbe7-42f2-9f67-676b58c4dbaf.png","",[]],
+  ["芯烨","T721U","是","","",[]],
+  ["芯烨","T58H","兼容性未知","","",[]],
+  ["佳博","GP-1326D","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1790821529006-cf77e1c2-aac2-47e1-b4cf-e07f2fcbe0fc.png","",[]],
+  ["启锐","QR-368C","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1790834934967-e474758f-ceda-4a76-a6ac-0c7eec4b964d.png","",[]],
+  ["实达","IP-790K","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1791516019783-a9567096-66a2-4c65-8a65-a6feed624931.png","",[]],
+  ["雅柯莱","M102","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1791605640330-923effc7-cc06-4c8c-af9b-ffe0140dcb09.png","便携机",[]],
+  ["爱宝","BC-80155T","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1791706552702-4b837edd-1b99-4a92-ba7e-bb7ec56f4bb4.png","",[]],
+  ["佳能","Smart Tank 589","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1791799017147-07a5e87a-9c1c-43ab-9b0e-8f1ba90fd9a6.png","",[]],
+  ["佳能","LBP2900+","否","https://cdn.nlark.com/yuque/0/2026/png/57169426/1791799188773-306e132e-310c-412d-9898-689428cbe66a.png","佳能LBP打印机网络响应速度很高，故障率很高",[]],
+  ["TSC","TE244BT","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1791856004582-20927fef-e53a-4d31-9ee5-2cf22494ab55.png","",[]],
+  ["逊镭","MHT-L80G","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1791949981378-11ce7292-65fd-4321-8337-ae2680e2553b.png","",[]],
+  ["芯烨","XP-Q90EC","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/57169426/1792137140616-df6217d8-b7ac-4a5e-97f2-eed5cd63b816.png","",[]],
+  ["佳博","GP-1924T","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1792410800015-ac6599f2-09fb-4925-b22c-7cca0fa0f9ee.png","",[]],
+  ["惠普","HP Smart Tank 582","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1792567223801-b9ebe99d-8ce5-4028-8941-2eb46a5e336e.png","",[]],
+  ["佳博","GP-80V","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1792633166152-8f7d6f45-c59c-47dd-bfd4-9c824ec194f2.png","",[]],
+  ["佳博","GP-R222C","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1792638530821-91d73775-688d-43b7-a188-441703f65f37.png","",[]],
+  ["惠普","SNPRC-2511-01","","https://cdn.nlark.com/yuque/0/2026/png/39055795/1792732444510-668cc581-4f3c-4600-a093-7132cc4fa9b1.png","",[]],
+  ["秦丝","QS-D244H","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1792815048703-f772d6f0-bee1-4dfd-ba88-8eda7f68a506.png","",[]],
+  ["惠普","LaserJet Pro M104w","是","https://cdn.nlark.com/yuque/0/2026/jpeg/22768632/1792906537851-1f717956-afec-426f-b98c-9a3eb1c49ac7.jpeg","",["https://cdn.nlark.com/yuque/0/2026/jpeg/22768632/1792906544639-d788f48f-97c8-4908-894c-e25721873f01.jpeg"]],
+  ["得力","GE430-W","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1793085255188-caa6c778-678f-4087-97de-428ff49a1ed9.png","",[]],
+  ["博思得","POSTEK G-3106","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1793174900589-000ed495-ffea-427d-a82d-d92562c54059.png","",[]],
+  ["汉印","E430B蓝牙版","是","https://cdn.nlark.com/yuque/0/2026/png/22768632/1793325462185-d4dfa475-08b6-4f69-b490-3e39142bcf9c.png","",[]],
+  ["华购","HG-P002","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1793581758726-1360d79a-6fd0-4cce-ae6e-db06c1df0e2a.png","ESC指令支持",[]],
+  ["奔图","P2506W","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1793694408934-f5fff3c5-8ae8-4a23-8ddc-45efe9ceb22e.png","",[]],
+  ["BSC","bsc-3498","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1793783645261-87d1a296-50ab-4db0-bb86-3a860da1c510.png","",[]],
+  ["浩顺","HS-80180C","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1793843171704-fa779542-d039-45c6-bf34-e68cd05d245a.png","",[]],
+  ["启锐","QR-488BT","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1793851778183-211adb8a-54fb-4977-8a81-e5e01d8d58f8.png","",[]],
+  ["克鲁伯","CS 70pro 300BTT","兼容性未知","https://cdn.nlark.com/yuque/0/2026/png/28362692/1793865392308-91ce3e81-85ed-4615-b09a-51f8e76ff0a0.png","",[]],
+  ["打印猿","PDD-150","否","https://cdn.nlark.com/yuque/0/2026/png/28362692/1793953035160-e7c74f94-7c10-49b7-aef7-33f03c553e83.png","打印数量不对",[]],
+  ["汉印","N31","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794030782539-581f8daf-73d4-4dba-a343-bc61253bb121.png","",[]],
+  ["启瑞","QR-368","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794030826308-6f85afe2-5d4a-4c02-8ae6-fdbfe6b52501.png","",[]],
+  ["芯烨","Xprinter XP-T454B","是","https://cdn.nlark.com/yuque/0/2026/png/57169426/1794110894923-5dbb53d3-bf1e-4466-b15f-ef33d87685c5.png","",[]],
+  ["佳能","E478","是","","",[]],
+  ["精臣","K2","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794708799748-249d458c-7d22-4ee9-90e4-2d07add7083e.png","",[]],
+  ["TSC","ttp-244plus","是","https://cdn.nlark.com/yuque/0/2026/png/39055795/1794908415830-096da8cb-995e-464c-b53e-88633badc021.png","",[]],
+  ["得力","GE350W","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794997145526-9a97a5ea-88c5-435b-9918-efc87f334878.png","",[]],
+  ["汉印","D45","是","https://cdn.nlark.com/yuque/0/2026/png/28362692/1794997172089-74f8d0a4-157c-4f23-afae-ba22506cd28e.png","",[]]
+];
+
+/* ========== 云盒兼容性搜索(数据内嵌,离线可用) ==========
+   数据来源:语雀《打印机型号云盒兼容(含未收集)》
+   https://hzecool.yuque.com/ibfx5s/oxkphb/wytoyhy0fq56prq0?singleDoc#hoEk
+   同步日期:2026-11-24;每行字段 = [品牌, 型号, 兼容结果, 主图, 备注, 更多图片]
+   图片走语雀 CDN 缩略图参数(失败自动回退原图),不额外占用仓库体积。 */
+(function compatSearch() {
+    const card = document.getElementById("compatCard");
+    if (!card || typeof CB_DATA === "undefined") return;
+    const input = card.querySelector("#cbInput");
+    const clearBtn = card.querySelector("#cbClear");
+    const quick = card.querySelector("#cbQuick");
+    const stat = card.querySelector("#cbStat");
+    const results = card.querySelector("#cbResults");
+    const UPDATED = "2026-11-24";
+    const LIMIT = 80;
+    const IDLE_STAT = "共收录 " + CB_DATA.length + " 个型号 · 数据更新于 " + UPDATED;
+    const QUICK = ["佳博", "芯烨", "得力", "惠普", "爱普生", "TSC", "汉印", "映美"];
+    /* 品牌中英文别名:搜 hp 也能出惠普,搜 gprinter 也能出佳博 */
+    const ALIAS = [
+        ["惠普", "hp"], ["佳博", "gprinter"], ["芯烨", "xprinter"], ["爱普生", "epson"],
+        ["得力", "deli"], ["汉印", "hprt"], ["映美", "jolimark"], ["容大", "rongta"],
+        ["新北洋", "snbc"], ["思普瑞特", "sprt"], ["立象", "argox"], ["科城", "godex"],
+        ["精臣", "niimbot"], ["得实", "dascom"], ["佳能", "canon"], ["兄弟", "brother"],
+        ["东芝", "toshiba"], ["西铁城", "citizen"], ["斑马", "zebra"], ["博思得", "postek"],
+        ["启锐", "qirui"], ["快麦", "kuaimai"], ["实达", "start"], ["中崎", "zonerich"]
+    ];
+    const PRINTER_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>';
+
+    /* 归一化:忽略大小写 / 空格 / 连字符 / 括号,全角转半角,便于模糊匹配 */
+    function nf(s) {
+        return String(s || "")
+            .replace(/[\uFF01-\uFF5E]/g, function (ch) { return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); })
+            .toLowerCase()
+            .replace(/[\s\-_—–·.,，、/\\()\[\]{}【】《》"'’“”]+/g, "");
+    }
+    /* 别名扩展:预先把每个型号的可搜文本算好,避免每次输入重复计算 */
+    const ALIAS_N = ALIAS.map(function (p) { return [nf(p[0]), nf(p[1])]; });
+    const ITEMS = (function () {
+        const list = [];
+        CB_DATA.forEach(function (r, i) {
+            const it = {
+                i: i, brand: r[0] || "", model: r[1] || "", compat: r[2] || "",
+                img: r[3] || "", note: r[4] || "", more: r[5] || []
+            };
+            const base = nf(it.brand) + " " + nf(it.model);
+            let hay = base;
+            for (let k = 0; k < ALIAS_N.length; k++) {
+                const a = ALIAS_N[k][0], b = ALIAS_N[k][1];
+                if (base.indexOf(a) >= 0 || base.indexOf(b) >= 0) hay += " " + a + " " + b;
+            }
+            it.hay = hay;
+            list.push(it);
+        });
+        return list;
+    })();
+
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+    }
+    function escRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+    /* 关键词高亮:只高亮原文里原样出现的片段(如 GP-3120),归一化后才匹配的不标 */
+    function hl(raw, tokens) {
+        const list = tokens.filter(function (t) {
+            return t && raw.toLowerCase().indexOf(t.toLowerCase()) >= 0;
+        }).sort(function (a, b) { return b.length - a.length; });
+        if (!list.length) return esc(raw);
+        const re = new RegExp("(" + list.map(escRe).join("|") + ")", "gi");
+        let out = "", last = 0, m;
+        while ((m = re.exec(raw))) {
+            out += esc(raw.slice(last, m.index)) + "<mark>" + esc(m[0]) + "</mark>";
+            last = m.index + m[0].length;
+            if (!m[0].length) re.lastIndex++;
+        }
+        return out + esc(raw.slice(last));
+    }
+    function imgUrl(u, w) {
+        if (!u) return "";
+        return u + (u.indexOf("?") >= 0 ? "&" : "?") + "x-oss-process=image/resize,w_" + w + "/format,webp";
+    }
+    function compatBadges(compat) {
+        if (!compat) return '<span class="cb-badge cb-unknown">未标注</span>';
+        return compat.split("|").map(function (v) {
+            const cls = v === "是" ? "cb-yes" : v === "否" ? "cb-no" :
+                v === "不推荐" ? "cb-nr" : v === "功能受限" ? "cb-lim" : "cb-unknown";
+            const label = v === "是" ? "兼容" : v === "否" ? "不兼容" : v;
+            return '<span class="cb-badge ' + cls + '">' + esc(label) + "</span>";
+        }).join("");
+    }
+    /* 搜索:空格分隔多个关键词需全部命中;按 型号完全匹配 > 前缀 > 包含 > 品牌 排序 */
+    function tokenHit(hay, t) {
+        if (hay.indexOf(t) < 0) return false;
+        /* 极短英文/数字(如 hp)要求独立成词,避免命中 hprt 里的 hp */
+        if (/^[a-z0-9]{1,2}$/.test(t)) {
+            return new RegExp("(^|\\s)" + escRe(t) + "(\\s|$)").test(hay);
+        }
+        return true;
+    }
+    function compatRank(c) {
+        const p = c.split("|");
+        if (p.indexOf("是") >= 0) return p.indexOf("功能受限") >= 0 ? 1 : 0;
+        if (p.indexOf("兼容性未知") >= 0) return 2;
+        if (p.indexOf("不推荐") >= 0) return 3;
+        if (p.indexOf("否") >= 0) return 4;
+        return 5;
+    }
+    function search(q) {
+        const tokens = q.toLowerCase().split(/\s+/).map(nf).filter(Boolean);
+        if (!tokens.length) return { hits: [], tokens: [] };
+        const qn = tokens.join("");
+        const hits = [];
+        for (let i = 0; i < ITEMS.length; i++) {
+            const it = ITEMS[i];
+            let ok = true;
+            for (let t = 0; t < tokens.length; t++) {
+                if (!tokenHit(it.hay, tokens[t])) { ok = false; break; }
+            }
+            if (!ok) continue;
+            const mn = nf(it.model), head = tokens[0];
+            let score = 1;
+            if (mn === qn || mn === head) score = 6;
+            else if (mn.indexOf(qn) === 0 || mn.indexOf(head) === 0) score = 5;
+            else if (mn.indexOf(qn) >= 0) score = 4;
+            else if (mn.indexOf(head) >= 0) score = 3;
+            else if (nf(it.brand).indexOf(head) >= 0) score = 2;
+            hits.push({ it: it, score: score });
+        }
+        hits.sort(function (a, b) {
+            return b.score - a.score ||
+                compatRank(a.it.compat) - compatRank(b.it.compat) ||
+                a.it.model.localeCompare(b.it.model, "zh", { numeric: true });
+        });
+        return { hits: hits, tokens: tokens };
+    }
+    function thumbHtml(it) {
+        const n = (it.img ? 1 : 0) + it.more.length;
+        if (!it.img) {
+            return '<span class="cb-thumb noimg" title="原表未收录图片">' + PRINTER_IC + "</span>";
+        }
+        return '<button type="button" class="cb-thumb" data-i="' + it.i + '" title="点击查看大图' +
+            (n > 1 ? "(共 " + n + " 张)" : "") + '">' + PRINTER_IC +
+            '<img loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="" src="' +
+            esc(imgUrl(it.img, 260)) + '" data-orig="' + esc(it.img) +
+            '" onerror="this.onerror=null;this.src=this.dataset.orig">' +
+            (n > 1 ? '<span class="cb-imgn">' + n + " 图</span>" : "") +
+            "</button>";
+    }
+    function render(hits, rawTokens) {
+        let yes = 0, no = 0, other = 0;
+        hits.forEach(function (h) {
+            const parts = h.it.compat.split("|");
+            if (parts.indexOf("是") >= 0) yes++;
+            else if (parts.indexOf("否") >= 0) no++;
+            else other++;
+        });
+        if (!hits.length) {
+            stat.textContent = "没有找到匹配的型号";
+            results.hidden = false;
+            results.innerHTML = '<div class="cb-none">没有找到匹配的型号<br>' +
+                "试试只输入型号的一部分(如 3120、615),或换成品牌名(如 佳博、惠普)</div>";
+            return;
+        }
+        stat.textContent = "找到 " + hits.length + " 条 · 兼容 " + yes +
+            " / 不兼容 " + no + " / 未知等 " + other;
+        const html = hits.slice(0, LIMIT).map(function (h) {
+            const it = h.it;
+            return '<article class="cb-item">' + thumbHtml(it) +
+                '<div class="cb-body">' +
+                '<div class="cb-brand">' + hl(it.brand, rawTokens) + "</div>" +
+                '<div class="cb-model">' + hl(it.model, rawTokens) + "</div>" +
+                '<div class="cb-badges">' + compatBadges(it.compat) + "</div>" +
+                (it.note ? '<div class="cb-note" title="' + esc(it.note) + '">' + esc(it.note) + "</div>" : "") +
+                "</div></article>";
+        }).join("");
+        results.innerHTML = html + (hits.length > LIMIT
+            ? '<p class="cb-more">结果较多,仅显示前 ' + LIMIT + " 条 · 请补充关键词缩小范围</p>" : "");
+        results.hidden = false;
+    }
+    function openGallery(i) {
+        const it = ITEMS[i];
+        if (!it) return;
+        const urls = [it.img].concat(it.more).filter(Boolean);
+        const html = '<div class="cb-gal">' + urls.map(function (u) {
+            return '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(imgUrl(u, 1000)) +
+                '" data-orig="' + esc(u) + '" alt="' + esc(it.brand + " " + it.model) +
+                '" onerror="this.onerror=null;this.src=this.dataset.orig">';
+        }).join("") + "</div>" +
+            '<p class="tip" style="margin-top:10px;line-height:1.7">' + esc(it.brand) + " · " +
+            compatBadges(it.compat) + (it.note ? "<br>" + esc(it.note) : "") + "</p>";
+        if (typeof openModal === "function") {
+            openModal(it.brand + " · " + it.model, html,
+                '<button type="button" class="btn btn-ghost" data-close>关闭</button>', "cb-gal-modal");
+        } else {
+            window.open(it.img, "_blank", "noopener");
+        }
+    }
+    function reset() {
+        results.hidden = true;
+        results.innerHTML = "";
+        quick.hidden = false;
+        stat.textContent = IDLE_STAT;
+    }
+    function run() {
+        const q = input.value.trim();
+        clearBtn.hidden = !q;
+        if (!q) { reset(); return; }
+        quick.hidden = true;
+        const rawTokens = q.split(/\s+/).filter(Boolean);
+        const r = search(q);
+        render(r.hits, rawTokens);
+    }
+    let tmr = null;
+    input.addEventListener("input", function () {
+        clearTimeout(tmr);
+        tmr = setTimeout(run, 120);
+    });
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { clearTimeout(tmr); run(); }
+        if (e.key === "Escape" && input.value) { input.value = ""; run(); }
+    });
+    clearBtn.onclick = function () { input.value = ""; run(); input.focus(); };
+    quick.addEventListener("click", function (e) {
+        const b = e.target.closest("[data-q]");
+        if (!b) return;
+        input.value = b.getAttribute("data-q");
+        run();
+        input.focus();
+    });
+    results.addEventListener("click", function (e) {
+        const b = e.target.closest(".cb-thumb[data-i]");
+        if (b) openGallery(Number(b.getAttribute("data-i")));
+    });
+    /* 首屏:统计 + 热门品牌快捷入口(带命中数量) */
+    stat.textContent = IDLE_STAT;
+    quick.innerHTML = '<span class="cb-q-label">热门品牌:</span>' + QUICK.map(function (b) {
+        const n = search(b).hits.length;
+        return '<button type="button" class="cb-qchip" data-q="' + esc(b) + '">' + esc(b) +
+            (n ? ' <span style="opacity:.75">' + n + "</span>" : "") + "</button>";
+    }).join("");
+})();
+
 </script>
 </body>
 </html>
